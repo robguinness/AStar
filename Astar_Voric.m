@@ -1,27 +1,19 @@
 clear all
 close all
 tic 
-addpath environment environment/penninsulas
-addpath ships
-addpath utilities
-addpath algorithm
-
-disp('Initializing the program...')
-
 %close all
 %figure('units','normalized','outerposition',[0 0 1 1])
 smoothingOn = false;
-
 pennPoints = [];
 
 %Define startPos
-startPos =  [126 65];
+startPos =  [200 150]; % [x-coordinate y-coordinate]
 %startPos = [735 241];
 %startPos(1) = 1074; % x-coordinate
 %startPos(2) = 260;  % y-coordinate
 
 %% Define finishPos
-finishPos = [1011 267];
+finishPos = [400 500];
 % finishPos(1) = 39; % x-coordinate
 % finishPos(2) = 20;  % y-coordinate
 
@@ -48,14 +40,12 @@ useSaved = false;
 %load paths
 %paths = ones(50,50);
 %[mapRows, mapCols] = size(paths);
-fprintf('Loading depth and speed data...')
-load environment/masksFull10
-load environment/speedFull10
-fprintf('done.\n')
+load masksFull10 % (1,1) is southwest corner of region
+load SpeedLauri
 
-fprintf('Calculating geographic coordinates...')
-[longitude, latitude] = calculateCoordinates;
-fprintf('done.\n')
+% load speedFull10
+
+[longitude, latitude] = calculateCoordinates2;
 
 %1000:1600,2800:3600
 %1050:1350,2900:3300
@@ -65,88 +55,92 @@ fprintf('done.\n')
 %minX = 2700;
 %maxX = 3600;
 
-minY = 1100;
-maxY = 1450;
-minX = 3100;
-maxX = 4400;
+minY = 1;
+maxY = 556;
+minX = 1;
+maxX = 827;
 
 %% Create masks and speed matrices
 
-fprintf('Resizing matrices...')
-depthMask = depthMask(minY:maxY,minX:maxX);
-continentMask = continentMask(minY:maxY,minX:maxX);
+depthMask = depthMask(minY:maxY,minX:maxX);    % 1 = depth meets the requirements 0= not meeting requirements, (1,1) is southwest corner
+continentMask = continentMask(minY:maxY,minX:maxX); % 1 = continent, 0 = not a continent, (1,1) is southwest corner
 speed = speed(minY:maxY,minX:maxX);
 %longitude = fliplr(longitude(minY:maxY,minX:maxX)');
 %latitude  = fliplr(latitude(minY:maxY,minX:maxX)');
-fprintf('done.\n')
+min(longitude(:));
+min(latitude(:));
+max(latitude(:));
 
-fprintf('Loading ship tracks...')
-sh = loadShipTrack(latitude, longitude);
-fprintf('done.\n')
+% sh = loadShipTrack(latitude, longitude);
+% 
+% numInTrack = size(sh,1);
+% trackPoints = zeros(numInTrack,2);
+% prevX = 0;
+% prevY = 0;
+% j=1;
+% for i=1:numInTrack
+%     [X, Y] = calcXY(latitude,longitude,sh(i,1),sh(i,2));
+%     if (X~=prevX || Y~=prevY)
+%         trackPoints(j,:) = [X, Y];
+%         j=j+1;
+%         prevX = X;
+%         prevY = Y;
+%     end
+% 
+% end
+% trackPoints = trackPoints(1:j-1,:);
+% plot(trackPoints(:,1),trackPoints(:,2),'y*-');
 
-
-
-fprintf('Plotting ship tracks...')
-numInTrack = size(sh,1);
-trackPoints = zeros(numInTrack,2);
-prevX = 0;
-prevY = 0;
-j=1;
-for i=1:numInTrack
-    [X, Y] = calcXY(latitude,longitude,sh(i,1),sh(i,2));
-    if (X~=prevX || Y~=prevY)
-        trackPoints(j,:) = [X, Y];
-        j=j+1;
-        prevX = X;
-        prevY = Y;
-    end
-
-end
-trackPoints = trackPoints(1:j-1,:);
-plot(trackPoints(:,1),trackPoints(:,2),'y*-');
-fprintf('done.\n')
-
-
-speed = speed';
+% Note: the below line transforms the speed matrix to match the same
+% definition as whichList, i.e. rows=x-coordinate, columns=y-coordinate
+% with (1,1) as the southwest corner (in other words, a normal map
+% projection)
+speed = speed'; 
 inverseSpeed = 1 ./speed;
 
 [mapRows, mapCols] = size(depthMask);
 
-fprintf('Loading "boundary" data...')
 load(['boundaries', num2str(minY), '-', num2str(maxY), '-', num2str(minX), '-', num2str(maxX)])
-fprintf('done.\n')
 
-hold on
 
 %% plot speed values
-%fprintf('Plotting speed data...')
-%plotSpeedValues(speed);
-%fprintf('done.\n')
+hold on
+plotSpeedValues(speed);
 
-% Set walkable and unwalkable 'constantsclose all'
+%% Set walkable and unwalkable 'constantsclose all'
 walkable = 1;
 unwalkable = 4;
 continent = 5;
 
-% Create whichList array
-whichList = sparse(mapCols, mapRows);
+% Create whichList array    note: choose sparse or non-sparse representation below 
+% Note that whichList is defined differently than depthMask and
+% continentMask. whichList is defined with columns representing x-coordinates
+% and rows representing y-coordinates
+% whichList = sparse(mapCols, mapRows);
+whichList = zeros(mapCols,mapRows);
 
-
-fprintf('Assigning unnavigable nodes as "unwalkable"...')
 % Get "unnavigable" indices from depthMask
 indexObstacles = find(depthMask'==0);
 
+% Get navigable indices from depthMask
+indexWaterRegions = find(depthMask'==1);
+
 % Assign these as unnavigable in whichList
 whichList(indexObstacles) = unwalkable;
-fprintf('done.\n')
 
-%% Plot these
-fprintf('Plotting obstacles...')
-for i = 1:size(indexObstacles,1)
-  [m, n] = ind2sub(size(whichList),indexObstacles(i));
-  plotPoint([m, n],'k');
-end
-fprintf('done.\n')
+
+% Plot whichList
+% tempWhichList = whichList;
+% indicesLand = find(whichList==4);
+% tempWhichList(indicesLand)=1;
+% imshow(full(tempWhichList))
+
+%% Plot water regions with black
+%figure
+% for i = 1:size(indexWaterRegions,1)
+%    [m, n] = ind2sub(size(whichList),indexWaterRegions(i));
+%    plotPoint([m, n],'k');
+% end
 
 % Get "continent" indices from paths
 indexContinents = find(continentMask'==1);
@@ -154,33 +148,28 @@ indexContinents = find(continentMask'==1);
 % Assign these as unnavigable in whichList
 whichList(indexContinents) = continent;
 
-fprintf('Plotting start and finish points...')
 plotPoint(finishPos, 'r');
 
 hold on
 
 plotPoint(startPos,'r');
-fprintf('done.\n')
 
-fprintf('Plotting ice breaker waypoints...')
 % Calculate ice breaker waypoints in [X, Y]
 numWaypoints = size(waypointsLatLong,1);
 waypoints = zeros(numWaypoints,2);
 for i=1:numWaypoints
-    [X, Y] = calcXY(latitude,longitude,waypointsLatLong(i,1),waypointsLatLong(i,2));
+    [X, Y] = calcXY2(latitude,longitude,waypointsLatLong(i,1),waypointsLatLong(i,2));
     waypoints(i,:) = [X, Y];
 end
-scatter(waypoints(:,1),waypoints(:,2),'b*');
-fprintf('done.\n')
+% scatter(waypoints(:,1),waypoints(:,2),'b*');
 
 % full speed
 speedOpt = 1;
 
 %% plot boundaries
-% fprintf('Plotting boundaries...')
-% s=1;
-% numberOfObjects = length(boundaries);
-% continents = cell(1,1);
+s=1;
+numberOfObjects = length(boundaries);
+continents = cell(1,1);
 % for k = 1:numberOfObjects
 %         object = boundaries{k,1};
 %         boundary = [object(:,2), mapRows - object(:,1)];
@@ -191,21 +180,19 @@ speedOpt = 1;
 %             s = s+1;
 %         end
 % end
-% fprintf('done.\n')
+
 
 
 %% find penninsula points
-% comment the below line out, if you have already calculated pennPoints and
-% hList (speeds up the execution)
 %[pennPoints, hList] = findPenninsulaPoints4([0, mapCols, 0, mapRows], ...
 %               continents,startPos, finishPos);
 
-%numHandles = size(hList,1);
-%for i=2:numHandles
-%    if ishandle(hList(i))
-%        delete(hList(i))
-%    end
-%end        
+% numHandles = size(hList,1);
+% for i=2:numHandles
+%     if ishandle(hList(i))
+%         delete(hList(i))
+%     end
+% end        
 %pennPoints = sortrows(pennPoints,3);
 %pennPoints = pennPoints(:,1:2);
 
@@ -216,27 +203,26 @@ else
 end
 
 %%
-fprintf('Starting A* algorithm...')
 if usePennPoints
     %pennPoints = [pennPoints; flipud(waypoints)];
     %define P values
 
     %Pvalues = findPvalues3(pennPoints, startPos, finishPos, whichList,boundaries, [0, mapCols, 0, mapRows]);
-    toc
+    
     % Call the Astar function
     [pathMatrix, pathArray, Gcost, dist] = AstarPenn3(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
-       pennPoints, latitude, longitude, Pvalues, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn);
+     pennPoints, latitude, longitude, Pvalues, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn);
 else
-    pathMatrix = Astar(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
-       latitude, longitude, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn);
+    [pathMatrix, pathArray, Gcost] = Astar(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
+       latitude, longitude, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn); 
 end
 %update figure
 drawnow;
-
+toc
 
 
     
 %pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
 %     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
-save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
+save('pathOutput20140307','pathMatrix','pathArray');
 
