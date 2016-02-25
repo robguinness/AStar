@@ -1,9 +1,11 @@
 
 % Function to find path, gets start and finish coordinates
-function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY, latitude, longitude, inverseSpeed, whichList, waypoints, delayOption, drawOption, smoothingOn)
+function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, delayOption, drawOption, smoothingOn, startTime)
     addpath algorithm/subroutines
-    Fcost = NaN;
-    minFcost = 10*sqrt((startX - targetX)^2 + (startY - targetY)^2);
+    addpath algorithm/classes
+    
+    
+    updateInterval = 10;
     
     pathArray = [];
     
@@ -12,7 +14,8 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
     speed = 1 ./ inverseSpeed;
     maxSpeed = max(max(speed));
     
-    colormap spring
+    minFcost = 10*sqrt((search.originX - search.destinationX)^2 + (search.originY - search.destinationY)^2) / maxSpeed;
+    
     cm = colormap;
 
     mapWidth = size(whichList, 1);
@@ -20,20 +23,17 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
 
     parentX = sparse(mapWidth,mapHeight);        % 2D array stores x coord of parent for every cell
     parentY = sparse(mapWidth,mapHeight);        % 2D array stores y coord of parent for every cell
+    
+    
     Gcost = sparse(mapWidth,mapHeight);          % 2D array stores G cost of each cell
-    Hcost = zeros(1,mapWidth*mapHeight);        % 1D array stores H cost of open cell list
     pathLength = 0;                             % Will store pathlength                
 
     % Create variables
-    newOpenListItemID = 0;
-    parentXval = 0;
-    parentYval = 0;
-    a = 0; b = 0; m = 0; u = 0; v = 0;
-    temp = 0;
-    corner = 0;
+    
+    %openListNew = struct('size',1,'sortedIndex',[],'nextIdValue',1,'x',[],'y');
+    openListNew = OpenList(mapHeight,mapWidth);
+    
     numberOfOpenListItems = 0;
-    addedGCost = 0;
-    tempGCost = 0;
     path = 0;
     
     % Variables used as constants
@@ -50,22 +50,19 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
     fprintf('------------------------------- \n\n');
     fprintf('Starting the simulation \n');
     fprintf('Using the following options: \n');
-    fprintf('Start position: %d, %d \n', startX, startY);
-    fprintf('Finish position: %d, %d \n', targetX, targetY);
+    fprintf('Start position: %d, %d \n', search.originX, search.originY);
+    fprintf('Finish position: %d, %d \n', search.destinationX, search.destinationY);
     fprintf('Map size: %d \n\n\n', size(whichList,1));
     fprintf('Progress:\n');
     
     % Check if start and finish coordinates are the same
-    if ( (startX == targetX) && (startY == targetY) )
+    if ( (search.originX == search.destinationX) && (search.originY == search.destinationY) )
         disp('Start and finish positions are the same');
         return;
     end
     
     % Add starting position to the open list
-    numberOfOpenListItems = 1;
-    openList(1) = 1;
-    openX(1) = startX;
-    openY(1) = startY;
+    openListNew.add(struct('x',search.originX,'y',search.originY),Inf,0);
    
     % Counter used for printing
     i = 1;
@@ -77,223 +74,112 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
         performDelay(delayOption)
         
         % Check if there are any members in the open list
-        if (numberOfOpenListItems ~= 0)
+        if (openListNew.size ~= 0)
             
             %% Get next node in open list and close it
             
-            % Get the values of the first item in the list into current vals
-            parentXval = openX(openList(1));
-            parentYval = openY(openList(1));
-            % set the coordinate to closed list
-            whichList(parentXval, parentYval) = onClosedList;
+            % Get the values of the first item in the open list (lowest
+            % Fcost) into current node
+            currentNode = openListNew.getFirstAndRemove();
             
-            % Print out current position being analysed
-            fprintf('%d. Current position being analysed: %d, %d \n', i, parentXval, parentYval);
-            i = i + 1;
+            % put the current node on the closed list
+            whichList(currentNode.x, currentNode.y) = onClosedList;
+       
+            % remove the current node from the open list
+            %[openList, numberOfOpenListItems] = removeCurrentNodeFromOpenList(openList,numberOfOpenListItems);
             
+            % Sort the open list
+            %openList = sortopenList(openList, Fcost, numberOfOpenListItems);
+            %openListNew.sort();
+            
+            %% Update stuff
+            
+            if (mod(i,10)==0)
+                % Print out current position being analysed
+                fprintf('%d. Current position being analysed: %d, %d \n', i, currentNode.x, currentNode.y);
+                fprintf('   Size of open list: %d\n', openListNew.size);
+                fprintf('   Elapsed time: %.2f seconds\n',toc(startTime));
+            end
+                       
             % Draw current position in blue (unless it's the start or
             % target cell.
-            if (drawOption && ~((parentXval == startX) && (parentYval == startY) || (parentXval == targetX) && (parentYval == targetY)) )
-               plotPoint([parentXval, parentYval], 'b');
+            if (drawOption && ~((currentNode.x == search.originX) && (currentNode.y == search.originY) || (currentNode.x == search.destinationX) && (currentNode.y == search.destinationY)) )
+               plotPoint([currentNode.x, currentNode.y], 'b');
             end
             
-            
-            %% ## List sorting ##
-            
-            % Put last element into the slot of first one
-            openList(1) = openList(numberOfOpenListItems);
-            
-            % Remove the first element from the open list
-            numberOfOpenListItems = numberOfOpenListItems - 1;
-            
-            % Make a copy of open list excluding first element
-            tempOpenList = openList(1:numberOfOpenListItems);
-            
-            % Clear openList
-            clear openList;
-            
-            % Assign tempOpenList to openList, clear temp one
-            openList = tempOpenList;
-            clear tempOpenList;
-            
-            v = 1;
-            % Put the item into it's appropriate slot by looking at the Fcost
-            while (1)
-                u = v;
-                % If both children exist
-                if (2*u+1 <= numberOfOpenListItems)
-                    % Check if F cost of the parent is greater than each child
-                    % Then select the lowest of the two children
-                    if (Fcost(openList(u)) >= Fcost(openList(2*u)))
-                        v = 2*u;
-                    end
-                    if (Fcost(openList(v)) >= Fcost(openList(2*u+1)))
-                        v = 2*u+1;
-                    end
-                % If only 1 child exists    
-                elseif (2*u <= numberOfOpenListItems)
-                    % Check if F cost of the parent is greater than child
-                    if (Fcost(openList(u)) >= Fcost(openList(2*u)))
-                        v = 2*u;
-                    end
-                end
-                
-                % If parent's F is larger than one of its children, swap them
-                if (u ~= v)
-                    temp = openList(u);
-                    openList(u) = openList(v);
-                    openList(v) = temp;
-                % Otherwise - break out of the loop
-                else
-                    break;
-                end
+            % Update drawing
+            if (mod(i,updateInterval)==0)
+                drawnow
             end
             
-            %if ~isnan(Fcost)
-            %    min(Fcost)
-            %end
-
+            % Increment counter
+            i = i + 1;
             
             %% Check the neighbours
-            % a x-value of neighbor
-            % b y-value of neighbor
-            
-            for j=1:56
-                [a, b] = getNextNeighbor(j, parentXval, parentYval);
+          
+            %for j=1:56
+            for j=1:8
+                neighbor = getNextNeighbor(j, currentNode);
                 
-                    % Check if it is within bounds of a map
-                    if ( (a > 0) && (b > 0) && (a <= mapWidth) && (b <= mapHeight) )
-                        % Check if not on closed list
-                        if (whichList(a,b) ~= onClosedList)
-                            %  ---Check if not an obstacle
-                            % Check if it is possible to navigate directly
-                            % to this neighbor cell from the parent cell
-                            if isNavigable(a, b, parentXval, parentYval, whichList)
-                            %if (whichList(a,b) ~= unwalkable)
+                % Check if it is within bounds of a map
+                if ( (neighbor.x > 0) && (neighbor.y > 0) && (neighbor.x <= mapWidth) && (neighbor.y <= mapHeight) )
+                    % Check if not on closed list
+                    if (whichList(neighbor.x,neighbor.y) ~= onClosedList)
+                        % Check if it is possible to navigate directly
+                        % to this neighbor cell from the parent cell
+                        if isNavigable(neighbor.x, neighbor.y, currentNode.x, currentNode.y, whichList)
+
+                            % If not on the open list, add it
+                            if (whichList(neighbor.x,neighbor.y) ~= onOpenList)
+
+                                % Calculate its G cost
+                                addedGCost = calculateGCost3(currentNode.x, currentNode.y,neighbor.x,neighbor.y,j,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
+
+                                % Update Gcost map
+                                Gcost(neighbor.x,neighbor.y) = Gcost(currentNode.x,currentNode.y) + addedGCost;
+
+                                % Get H and F costs and parent
+                                tmpHcost = 10*sqrt((neighbor.x- search.destinationX)^2 + (neighbor.y- search.destinationY)^2) / maxSpeed; %Euclidean distance
+                                tmpFcost = Gcost(neighbor.x,neighbor.y) + tmpHcost;
                                 
-                                corner = walkable;
-                                % Corner detection to prevent cutting
-                                %
-                                %  For example, the following path shown as
-                                %  the dots in the below diagram should not
-                                %  be allowed (obstacles marked as "X")
-                                %  ___________
-                                %  | | |.| | |
-                                %  |X|.|.| | |
-                                %  |.|X| | | |
-                                %  |.| |X| | |
-                                %  |.| | | | |
-                                %  -----------
-                                corner = determineIfCornerIsWalkable(a, b, parentXval, parentYval, whichList, corner);
+                                % Add neighbor to open list
+                                openListNew.add(neighbor,tmpFcost,tmpHcost);
+                                % Change value of current node in whichList
+                                % to 'onOpenList'
+                                whichList(neighbor.x,neighbor.y) = onOpenList;
 
-                                % If corner is walkable
-                                if (corner == walkable)
-                                    % If not on the open list, add it
-                                    if (whichList(a,b) ~= onOpenList)
-                                        % Create a new open list item
-                                        newOpenListItemID = newOpenListItemID + 1;
-                                        m = numberOfOpenListItems + 1;
-                                        openList(m) = newOpenListItemID;
-                                        openX(newOpenListItemID) = a;
-                                        openY(newOpenListItemID) = b;
-                                                 
-                                        % Calculate its G cost
-                                        addedGCost = calculateGCost3(parentXval, parentYval,a,b,j,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
-                                        
-%                                         if ( (abs(a - parentXval) == 1) && (abs(b - parentYval) == 1) )
-%                                             addedGCost = 14;
-%                                         else
-%                                             addedGCost = 10;
-%                                         end
-                                        % Update Gcost map
-                                        Gcost(a,b) = Gcost(parentXval,parentYval) + addedGCost;
-                                        
-                                        % Get H and F costs and parent
-                                        %Hcost(openList(m)) = 10*(abs(a - targetX) + abs(b - targetY)); %Manhattan distance
-                                        %Hcost(openList(m)) = 10*sqrt((a - targetX)^2 + (b - targetY)^2); %Euclidean distance
-                                        %Hcost(openList(m)) = 700*(abs(a - targetX) + abs(b - targetY)); %Suggestion from SO
-                                        % Hcost(openList(m)) = geoddistance(latitude(1,b),longitude(a,1),latitude(1,targetY),longitude(targetX,1)) / maxSpeed;
-                                        Hcost(openList(m)) = 10*sqrt((a - targetX)^2 + (b - targetY)^2) / maxSpeed; %Euclidean distance
-                                        Fcost(openList(m)) = Gcost(a,b) + Hcost(openList(m));
-                                        parentX(a,b) = parentXval;
-                                        parentY(a,b) = parentYval;
-                                        
-                                        % Draw current position, shade of
-                                        % yellow/orange indicates Fcost
-                                        if (drawOption && ~((a == startX) && (b == startY) || (a == targetX) && (b == targetY)) )
-                                            colorIndex = round((minFcost / Fcost(openList(m)))^3*64)
-                                            plotPoint([a, b], cm(colorIndex,:));
-                                        end
-                                        
-                                        % Listing
-                                        while (m ~= 1)
-                                            % Check if child's F cost < parent's F cost. If so, swap them
-                                            if (Fcost(openList(m)) <= Fcost(openList(round(m/2))))
-                                                temp = openList(round(m/2));
-                                                openList(round(m/2)) = openList(m);
-                                                openList(m) = temp;
-                                                m = round(m/2);
-                                            else
-                                                break;
-                                            end
-                                        end
-                                        
-                                        % Increment openlist items
-                                        numberOfOpenListItems = numberOfOpenListItems + 1;
-                                        % Change current node into open list
-                                        whichList(a,b) = onOpenList;
-                                    else % i.e. whichList(a,b) == onOpenList
-                                        % Calculate its G cost
-                                        addedGCost = calculateGCost3(parentXval, parentYval,a,b,j,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
-                                        tempGcost = Gcost(parentXval,parentYval) + addedGCost;
+                                parentX(neighbor.x,neighbor.y) = currentNode.x;
+                                parentY(neighbor.x,neighbor.y) = currentNode.y;
 
-                                        % If this path is shorter, change Gcost, Fcost and the parent cell
-                                        if (tempGcost < Gcost(a,b)),
-                                            parentX(a,b) = parentXval;
-                                            parentY(a,b) = parentYval;
-                                            Gcost(a,b) = tempGcost;
-
-                                            % Changing G cost also changes F cost, sothe open list has to be updated and reordered
-                                            % Look for item
-                                            for x=1:numberOfOpenListItems
-                                                % Identify the item
-                                                if ( (openX(openList(x)) == a) && (openY(openList(x)) == b) )
-                                                    % Change F cost
-                                                    Fcost(openList(x)) = Gcost(a,b) + Hcost(openList(x));
-                                                    
-                                                    % Change the color shade of
-                                                    % yellow/orange indicates Fcost
-                                                    if (drawOption && ~((a == startX) && (b == startY) || (a == targetX) && (b == targetY)) )
-                                                        colorIndex = round((minFcost / Fcost(openList(x)))^3*64)
-                                                        plotPoint([a, b], cm(colorIndex,:));
-                                                    end
-                                                    
-                                                    % Reorder the list if needed
-                                                    m = x;
-                                                    while (m ~= 1)
-                                                        % If child < parent, swap them
-                                                        if (Fcost(openList(m)) < Fcost(openList(round(m/2))))
-                                                            temp = openList(round(m/2));
-                                                            openList(round(m/2)) = openList(m);
-                                                            openList(m) = temp;
-                                                            m = round(m/2);
-                                                        else
-                                                            break;
-                                                        end
-                                                    end
-                                                    % Exit the loop when found
-                                                    break;
-                                                end
-                                            end % Loop through open list to find current cell
-                                        end   % updating GCost 
-
-                                    end % if-else statement checking whether neighbor is on open list    
-                                else % corner is not walkable
-                                    %fprintf('%d. Corner found, walking around it \n', i);
-                                    i = i + 1;
+                                % Draw current position, shade of
+                                % yellow/orange indicates Fcost
+                                if (drawOption && ~((neighbor.x== search.originX) && (neighbor.y== search.originY) || (neighbor.x== search.destinationX) && (neighbor.y== search.destinationY)) )
+                                    colorIndex = getColorIndex(tmpFcost, minFcost);
+                                    plotPoint([neighbor.x, neighbor.y], cm(colorIndex,:));
                                 end
-                            end
-                        end % if statement checking if neighbor is on closed list
+                                
+                            else % i.e. whichList(neighbor.x,neighbor.y) == onOpenList
+                                
+                                % Calculate its G cost
+                                addedGCost = calculateGCost3(currentNode.x, currentNode.y, neighbor.x, neighbor.y, j , inverseSpeed, waypoints, maxSpeed, iceBreakerDistThreshold);
+                                tempGcost = Gcost(currentNode.x,currentNode.y) + addedGCost;
+
+                                % If this path is shorter, change Gcost, Fcost and the parent cell
+                                if (tempGcost < Gcost(neighbor.x,neighbor.y)),
+                                    parentX(neighbor.x,neighbor.y) = currentNode.x;
+                                    parentY(neighbor.x,neighbor.y) = currentNode.y;
+                                    Gcost(neighbor.x,neighbor.y) = tempGcost;
+
+                                    % Changing G cost also changes F cost, sothe open list has to be updated
+                                    % Change F cost
+                                    openListNew.updateByCoordinates(neighbor,tempGcost);
+
+                                end   % updating GCost 
+
+                            end % if-else statement checking whether neighbor is on open list    
+
+                        end % if statement checking if neighbor cell is navigable
+                    end % if statement checking if neighbor is on closed list
                 end % if statement checking that neighbor is on the map
             end %End of loop through the neighbors
                                 
@@ -306,7 +192,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
             break;
         end
         % If target is added to open list, path has been found
-        if (whichList(targetX,targetY) == onOpenList)
+        if (whichList(search.destinationX,search.destinationY) == onOpenList)
             path = found;
             % Print out success
             fprintf('%d. Path to the target found! \n', i);
@@ -324,8 +210,8 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
         pathLength = 0;
         
         % Backtrack the path using parents
-        pathX = targetX;
-        pathY = targetY;
+        pathX = search.destinationX;
+        pathY = search.destinationY;
         % Print out backtracking
         fprintf('%d. Backtracing to find the shortest route \n', i);
         i = i + 1;
@@ -349,14 +235,14 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
             pathArray(pathLength,2) = pathY;
         
             % Draw return path in magenta
-            if (drawOption && ~((pathX == startX) && (pathY == startY) || (pathX == targetX) && (pathY == targetY)) )
+            if (drawOption && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
                 plotPoint([pathX, pathY], 'c');
             end
             
 
             
             % If starting position reached, break out of the loop
-            if ( (pathX == startX) && (pathY == startY) )
+            if ( (pathX == search.originX) && (pathY == search.originY) )
                 break;
             end
         end
@@ -366,7 +252,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(startX, startY, targetX, targetY
         
     end
     
-    pathArray = [targetX targetY; pathArray(1:pathLength,:)];
+    pathArray = [search.destinationX search.destinationY; pathArray(1:pathLength,:)];
     plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
     
     if (smoothingOn)
@@ -393,4 +279,8 @@ function performDelay(delayOption)
                 disp('Press any key (for example space) for next step');
                 pause;
         end
+end
+
+function colorIndex = getColorIndex(fCost, minFcost)
+  colorIndex = round((minFcost / fCost )^3*63)+1;
 end
