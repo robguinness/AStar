@@ -41,14 +41,39 @@
 %                A value of "0" indicates no continent whereas a value of "1" indicates
 %                a contient. Otherwise, the definition is the same as depthMask
 %
-% waypointsLatLong
-% waypointsXY
-% longitude
-% latitude
-% inverseSpeed
-% speed
-% whichList
+% waypointsLatLong  a two-column matrix storing coordinates of waypoints in ice given by Icebreaker in Lat and Long.  
+%
+% waypoints      a two-column matrix storing coordinates of waypoints in ice given by Icebreaker in X and Y, 
+%                where X corresponds to Longitude and Y corresponds to Latitude.
+%
+% longitude      n by m matrix containing values of longitude for a given search area. Each row corresponds to a particular longitude 
+%                (there are n longitudes in search area) that crosses all latitudes (m), represented by columns. Rows can be
+%                seen as meridians and coluns as parallels.              
+%
+% latitude       n by m matrix containing values of latitude for a given search area. Each row corresponds to a particular longitude 
+%                (there are n longitudes in search area) that crosses all latitudes (m), represented by columns. Rows can be
+%                seen as meridians and coluns as parallels.    
+%
+% speed          n by m matrix where the elements in the matrix represent speed for a particular ship, based on ship performance model developed by AALTO. 
+%                Rows in the matrix represent longitude (x-coordinates) and columns represent latitude (y-coordiantes).
+%                Element (1,1) is the Southwest corner of the area - N.B. the difference in orientation between speed and depthMask matrices.
+%
+%                --------------------------------------------
+%                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | n|
+%                --------------------------------------------
+%                |1| SW   0   0   0   0   0   0   0   0   NW|
+%                |2| 0    0   0   0   0   0   0   0   1   1 |
+%                |3| 0    0   0   0   0   1   1   1   1   1 |
+%                |4| 0    0   0   0   0   1   1   1   1   1 |  
+%                |m| SE   0   0   0   1   1   1   1   1   NE| 
+%                 --------------------------------------------
+% inverseSpeed   a matrix containing inverse values of those stored in speed matrix (1/speed).
+%
+% whichList      n by m matrix containing information about each and every cell in the search area. The cells are given numbers,
+%                describing their status (walkable = 1; onOpenList = 2; onClosedList = 3; unwalkable = 4; found = 1; nonexistent = 2) 
+%
 % shipTrackLatLong
+%
 % shipTrackXY
 
 disp('Initializing the program...')
@@ -88,12 +113,12 @@ speedOpt = 1;   % 1 = full speed
 %% Define search parameters
 
 % Define startPos
-search.originX = 200;       % x-coordinate
-search.originY = 30;        % y-coordinate
+search.originX = 490;       % x-coordinate
+search.originY = 151;        % y-coordinate
 
 % Define finishPos
-search.destinationX = 1000;  % x-coordinate
-search.destinationY = 150;  % y-coordinate
+search.destinationX = 213;  % x-coordinate
+search.destinationY = 217;  % y-coordinate
 
 % Define search area
 minX = 2800;
