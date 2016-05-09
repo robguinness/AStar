@@ -79,7 +79,6 @@
 disp('Initializing the program...')
 
 %% Misc. initialization
-tic
 clc
 clear all
 close all
@@ -115,14 +114,14 @@ speedOpt = 1;   % 1 = full speed
 %% Define search parameters
 
 % Define startPos
-search.originLat = 59;       % Lat coordinate
-search.originLong = 20;      % Long coordinate
+search.originLat = 58;       % Lat coordinate
+search.originLong = 22;      % Long coordinate
 
 % search.originX = 490;       % x-coordinate
 % search.originY = 151;        % y-coordinate
 
 % Define finishPos
-search.destinationLat = 61;   % Lat coordinate
+search.destinationLat = 60;   % Lat coordinate
 search.destinationLong = 30;  % Long coordinate
 
 % search.destinationX = 213;  % x-coordinate
@@ -209,11 +208,11 @@ continentMask = continentMask(minY:maxY,minX:maxX);
 speed2=repelem(speed,2,2);
 S=sparse(2400,4800);
 sizeS=size(S);
-S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=speed2;
+S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-originY),HELMI.originX:HELMI.destinationX)=speed2;
 %S(810:1921,2724:4383)=speed2;
 speed=S;
 speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
-speed=fliplr(speed');
+speed=speed';
 %speed = fliplr(speed');
 inverseSpeed = 1 ./speed;
 fprintf('done.\n')
@@ -343,7 +342,7 @@ if ~isempty(pennPoints)
 else
     usePennPoints = false;
 end
-toc
+
 timeForSetup = toc;
 fprintf('Time for set-up was %.2f seconds.\n',timeForSetup);
 
