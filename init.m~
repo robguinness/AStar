@@ -18,8 +18,9 @@
 %                .destinationX  x-coordinate of the destination
 %                .destinationY  y-coordinate of the destination
 %
-% depthMask      a binary matrix where the elements in the matrix represent 
-%                whether or not the depth requirements for a particular ships 
+% depthMask      a binary matrix, m by n (as opposite to other matrices),  
+%                where the elements in the matrix represent whether or not 
+%                the depth requirements for a particular ships 
 %                are met at the specified location. A value of "0" indicates
 %                the requirements are met, whereas a value of "1" indicates
 %                the depth requirements are not met. Rows in the matrix
@@ -27,13 +28,13 @@
 %                Element (1,1) is the Northwest corner of the area
 %                
 %                --------------------------------------------
-%                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10|
+%                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | n|
 %                --------------------------------------------
 %                |1| NW   0   0   0   0   0   0   0   0   NE|
 %                |2| 0    0   0   0   0   0   0   0   1   1 |
 %                |3| 0    0   0   0   0   1   1   1   1   1 |
 %                |4| 0    0   0   0   0   1   1   1   1   1 |  <- land in SE
-%                |5| SW   0   0   0   1   1   1   1   1   SE|     corner of region
+%                |m| SW   0   0   0   1   1   1   1   1   SE|     corner of region
 %                 --------------------------------------------
 %                 
 % continentMask  a binary matrix where the elements in the matrix represent 
@@ -79,6 +80,7 @@
 disp('Initializing the program...')
 
 %% Misc. initialization
+tic
 clc
 clear all
 close all
@@ -114,14 +116,14 @@ speedOpt = 1;   % 1 = full speed
 %% Define search parameters
 
 % Define startPos
-search.originLat = 58;       % Lat coordinate
-search.originLong = 22;      % Long coordinate
+search.originLat = 59;       % Lat coordinate
+search.originLong = 20;      % Long coordinate
 
 % search.originX = 490;       % x-coordinate
 % search.originY = 151;        % y-coordinate
 
 % Define finishPos
-search.destinationLat = 60;   % Lat coordinate
+search.destinationLat = 61;   % Lat coordinate
 search.destinationLong = 30;  % Long coordinate
 
 % search.destinationX = 213;  % x-coordinate
@@ -208,11 +210,11 @@ continentMask = continentMask(minY:maxY,minX:maxX);
 speed2=repelem(speed,2,2);
 S=sparse(2400,4800);
 sizeS=size(S);
-S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-originY),HELMI.originX:HELMI.destinationX)=speed2;
+S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=speed2;
 %S(810:1921,2724:4383)=speed2;
 speed=S;
 speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
-speed=speed';
+speed=fliplr(speed');
 %speed = fliplr(speed');
 inverseSpeed = 1 ./speed;
 fprintf('done.\n')
@@ -342,7 +344,7 @@ if ~isempty(pennPoints)
 else
     usePennPoints = false;
 end
-
+toc
 timeForSetup = toc;
 fprintf('Time for set-up was %.2f seconds.\n',timeForSetup);
 

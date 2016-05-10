@@ -4,7 +4,8 @@
 % 
 % Version History
 % (ver. #)   (date)        (author of new version)    (see notes)
-%  v0.1      24.2.2016      R. Guinness                none
+%   v0.1      24.2.2016      R. Guinness                none
+%   v0.2      10.05.2016     J. Montewka 
 %
 % DEFINITIONS: (change definitions only with great caution!
 % 
@@ -18,8 +19,9 @@
 %                .destinationX  x-coordinate of the destination
 %                .destinationY  y-coordinate of the destination
 %
-% depthMask      a binary matrix where the elements in the matrix represent 
-%                whether or not the depth requirements for a particular ships 
+% depthMask      a binary matrix, m by n (as opposite to other matrices),  
+%                where the elements in the matrix represent whether or not 
+%                the depth requirements for a particular ships 
 %                are met at the specified location. A value of "0" indicates
 %                the requirements are met, whereas a value of "1" indicates
 %                the depth requirements are not met. Rows in the matrix
@@ -27,13 +29,13 @@
 %                Element (1,1) is the Northwest corner of the area
 %                
 %                --------------------------------------------
-%                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10|
+%                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | n|
 %                --------------------------------------------
 %                |1| NW   0   0   0   0   0   0   0   0   NE|
 %                |2| 0    0   0   0   0   0   0   0   1   1 |
 %                |3| 0    0   0   0   0   1   1   1   1   1 |
 %                |4| 0    0   0   0   0   1   1   1   1   1 |  <- land in SE
-%                |5| SW   0   0   0   1   1   1   1   1   SE|     corner of region
+%                |m| SW   0   0   0   1   1   1   1   1   SE|     corner of region
 %                 --------------------------------------------
 %                 
 % continentMask  a binary matrix where the elements in the matrix represent 
@@ -115,15 +117,15 @@ speedOpt = 1;   % 1 = full speed
 %% Define search parameters
 
 % Define startPos
-search.originLat = 59;       % Lat coordinate
-search.originLong = 20;      % Long coordinate
+search.originLat = 63.2;       % Lat coordinate
+search.originLong = 20.5;      % Long coordinate
 
 % search.originX = 490;       % x-coordinate
 % search.originY = 151;        % y-coordinate
 
 % Define finishPos
-search.destinationLat = 61;   % Lat coordinate
-search.destinationLong = 30;  % Long coordinate
+search.destinationLat = 64;   % Lat coordinate
+search.destinationLong = 23;  % Long coordinate
 
 % search.destinationX = 213;  % x-coordinate
 % search.destinationY = 217;  % y-coordinate
@@ -153,7 +155,7 @@ fprintf('Calculating geographic coordinates...')
 %subset of GEBCO defining the search area
 % XY coordinates of HELMI grid: SW(2727,809), NE(4369,1919)
 
-MARGIN=50;
+MARGIN=100;
 [minX, maxX, minY, maxY]=calculateSearchArea(search.originX, search.originY, search.destinationX, search.destinationY,MARGIN);
 
 fprintf('done.\n')
@@ -216,6 +218,14 @@ speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
 speed=fliplr(speed');
 %speed = fliplr(speed');
 inverseSpeed = 1 ./speed;
+
+% search.originX,Y needs to be made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
+
+search.originX=search.originX-minX;
+search.originY=search.originY-minY;
+search.destinationX=search.destinationX-minX;
+search.destinationY=search.destinationY-minY;
+
 fprintf('done.\n')
 
 %% Create whichList array
