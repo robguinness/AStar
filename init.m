@@ -107,7 +107,6 @@ pennPoints = [];
 global UNAVIGABLE; UNAVIGABLE = 4;
 global CONTINENT; CONTINENT= 5;
 
-
 %% Run-time parameters
 smoothingOn = false;
 drawOpt = true;
@@ -115,20 +114,26 @@ useSaved = false;
 speedOpt = 1;   % 1 = full speed
 
 %% Define search parameters
+TallinnLat=59.52;   TallinnLong=24.7;
+HelsinkiLat=60.1;  HelsinkiLong=24.95;
+HankoLat=59.73;     HankoLong=23;
+KotkaLat=60.4;      KotkaLong=26.9;
+BalticLat=58;       BalticLong=20.5;
+RigaLat=57.1;       RigaLong=23.9;
+TurkuLat=60.4;      TurkuLong=22.1;
+VaasaLat=63.1;      VaasaLong=20.5;
+KokkolaLat=63.9;    KokkolaLong=23;
+OuluLat=65;         OuluLong=25.12;
+KemiLat=65.7;       KemiLong=25.55;
+LuleaLat=65.5;      LuleaLong=22.4;
 
 % Define startPos
-search.originLat = 63.2;       % Lat coordinate
-search.originLong = 20.5;      % Long coordinate
-
-% search.originX = 490;       % x-coordinate
-% search.originY = 151;        % y-coordinate
+search.originLat = HelsinkiLat;       % Lat coordinate
+search.originLong = HelsinkiLong;      % Long coordinate
 
 % Define finishPos
-search.destinationLat = 64;   % Lat coordinate
-search.destinationLong = 23;  % Long coordinate
-
-% search.destinationX = 213;  % x-coordinate
-% search.destinationY = 217;  % y-coordinate
+search.destinationLat = HankoLat;   % Lat coordinate
+search.destinationLong = HankoLong;  % Long coordinate
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
@@ -369,13 +374,43 @@ if usePennPoints
     [pathMatrix, pathArray, Gcost, dist] = AstarPenn3(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
        pennPoints, latitude, longitude, Pvalues, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn);
 else
-    pathMatrix = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn, startTime);
+    [pathMatrix, pathArray] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn, startTime);
 end
 %update figure
 % drawnow;
+%% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path
+[latout,lonout] = reducem(pathArray(:,2),pathArray(:,1));
+pathReduced=[latout, lonout];
+plot(pathReduced(:,2),pathReduced(:,1),'x');
 
-   
+sizePathReduced=size(pathReduced);
+for i=1:sizePathReduced
+    speedAlongPath(i)=speed(pathReduced(i,2),pathReduced(i,1));
+end
+speedAlongPath=speedAlongPath.*1.852; % Speed converted to knots from original m/s
+
+for i=1:1:sizePathReduced
+    COORD(i)=longitude(pathReduced(i,2),pathReduced(i,1));
+    COORD2(i)=latitude(pathReduced(i,2),pathReduced(i,1));
+end
+pathCoordinates=[COORD', COORD2'];
+
+for i=1:1:sizePathReduced-1
+    [arclen,az] = distance('rh',COORD2(i),COORD(i),COORD2(i+1),COORD(i+1));
+    dist(i)=arclen;
+    AZ(i)=az;
+end
+pathLength=sum(dist)*60; % distance expressed in Nautical Miles
+
+for i=1:1:sizePathReduced-1
+    dist2(i)=sqrt((pathReduced(i+1,2)-pathReduced(i,2))^2+(pathReduced(i+1,1)-pathReduced(i,1))^2);
+    timeAlongPath(i)=(60.*dist(i))./speedAlongPath(i+1);
+end
+TimeAlongPath=sum(timeAlongPath); %Time in hours
+%%
+
 %pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
 %     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
-save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
+%save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
+save('pathOutput20140307','pathMatrix','pathArray');
 

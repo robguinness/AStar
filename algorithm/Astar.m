@@ -94,7 +94,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             
             %% Update stuff
             
-            if (mod(i,10)==0)
+            if (mod(i,100)==0)
                 % Print out current position being analysed
                 fprintf('%d. Current position being analysed: %d, %d \n', i, currentNode.x, currentNode.y);
                 fprintf('   Size of open list: %d\n', openListNew.size);
@@ -118,7 +118,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             %% Check the neighbours
           
             %for j=1:56
-            for j=1:56
+            for j=1:8
                 neighbor = getNextNeighbor(j, currentNode);
                 
                 % Check if it is within bounds of a map

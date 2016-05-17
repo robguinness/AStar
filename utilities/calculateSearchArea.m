@@ -15,17 +15,17 @@ function [minX, maxX, minY, maxY]=calculateSearchArea(originX, originY, destinat
 %
 % OTHER NOTES:
 
-% minX=min(originX,destinationX)-ceil(margin/4);
-% maxX=max(originX,destinationX)+ceil(margin/4);
+minX=min(originX,destinationX)-ceil(margin/4);
+maxX=max(originX,destinationX)+ceil(margin/4);
+
+minY=min(originY,destinationY)-ceil(margin/2);
+maxY=max(originY,destinationY)+ceil(margin/2);
+
+% minX=min(originX,destinationX)-ceil(margin);
+% maxX=max(originX,destinationX)+ceil(margin);
 % 
-% minY=min(originY,destinationY)-ceil(margin/2);
-% maxY=max(originY,destinationY)+ceil(margin/2);
-
-minX=min(originX,destinationX)-ceil(margin);
-maxX=max(originX,destinationX)+ceil(margin);
-
-minY=min(originY,destinationY)-ceil(margin);
-maxY=max(originY,destinationY)+ceil(margin);
+% minY=min(originY,destinationY)-ceil(margin);
+% maxY=max(originY,destinationY)+ceil(margin);
 
 
 end
