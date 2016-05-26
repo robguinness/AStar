@@ -118,7 +118,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             %% Check the neighbours
           
             %for j=1:56
-            for j=1:8
+            for j=1:56
                 neighbor = getNextNeighbor(j, currentNode);
                 
                 % Check if it is within bounds of a map

@@ -5,7 +5,7 @@
 % Version History
 % (ver. #)   (date)        (author of new version)    (see notes)
 %   v0.1      24.2.2016      R. Guinness                none
-%   v0.2      10.05.2016     J. Montewka 
+%   v0.2      24.05.2016     J. Montewka 
 %
 % DEFINITIONS: (change definitions only with great caution!
 % 
@@ -77,6 +77,10 @@
 % shipTrackLatLong
 %
 % shipTrackXY
+%
+% stuckThresholds
+%
+% MARGIN
 
 disp('Initializing the program...')
 
@@ -121,19 +125,19 @@ KotkaLat=60.4;      KotkaLong=26.9;
 BalticLat=58;       BalticLong=20.5;
 RigaLat=57.1;       RigaLong=23.9;
 TurkuLat=60.4;      TurkuLong=22.1;
-VaasaLat=63.1;      VaasaLong=20.5;
-KokkolaLat=63.9;    KokkolaLong=23;
+VaasaLat=63.283;      VaasaLong=20.608;
+KokkolaLat=63.983;    KokkolaLong=22.866;
 OuluLat=65;         OuluLong=25.12;
 KemiLat=65.7;       KemiLong=25.55;
 LuleaLat=65.5;      LuleaLong=22.4;
 
 % Define startPos
-search.originLat = HelsinkiLat;       % Lat coordinate
-search.originLong = HelsinkiLong;      % Long coordinate
+search.originLat = TallinnLat;       % Lat coordinate
+search.originLong = TallinnLong;      % Long coordinate
 
 % Define finishPos
-search.destinationLat = HankoLat;   % Lat coordinate
-search.destinationLong = HankoLong;  % Long coordinate
+search.destinationLat = HelsinkiLat;   % Lat coordinate
+search.destinationLong = HelsinkiLong;  % Long coordinate
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
@@ -159,8 +163,8 @@ fprintf('Calculating geographic coordinates...')
 
 %subset of GEBCO defining the search area
 % XY coordinates of HELMI grid: SW(2727,809), NE(4369,1919)
-
-MARGIN=100;
+stuckThreshold=0.3;
+MARGIN=200;
 [minX, maxX, minY, maxY]=calculateSearchArea(search.originX, search.originY, search.destinationX, search.destinationY,MARGIN);
 
 fprintf('done.\n')
@@ -184,10 +188,11 @@ waypointsLatLong = [59.4333333333333, 23; ...
 
 fprintf('Loading depth and speed data...')
 load environment/masksFull10                                          % This loads a "depth mask" for the whole Baltic sea
-%load environment/speedFull10                                          % This loads a speed grid for the whole Baltic sea 
 load environment/speedAalto                                           % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
                                                                       % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 speed=flipud(speed);
+stuck=flipud(stuck);
+
 fprintf('done.\n')
 
 % fprintf('Loading "boundary" data...')
@@ -211,8 +216,8 @@ continentMask = continentMask(minY:maxY,minX:maxX);
 
 % Here a HELMI grid-based speed matrix is embeded into GEBCO-based grid
 % The X,Y coordinates of HELMI grid are hard-coded here (810:1921,2724:4383)
-% The aim is to have speed matrix oriented so, that its origin is SW corner
-% of a map, and its rows correspond to Longitude and columnt to Latitude
+% The aim is to have speed matrix oriented so, that its originates in SW corner
+% of a map, and its rows correspond to Longitude and column to Latitude
 speed2=repelem(speed,2,2);
 S=sparse(2400,4800);
 sizeS=size(S);
@@ -221,11 +226,31 @@ S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HEL
 speed=S;
 speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
 speed=fliplr(speed');
-%speed = fliplr(speed');
 inverseSpeed = 1 ./speed;
+clear S;
 
-% search.originX,Y needs to be made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
+% Here the matrix determining the probability of ship getting best in ice is
+% introduced, based on AALTO's model
 
+stuck2=repelem(stuck,2,2);
+S=sparse(2400,4800);
+S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=stuck2;
+stuck=S;
+stuck = stuck((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
+stuck=fliplr(stuck');
+
+% Combining the speed of a ship with the probability of getting beset in
+% ice, if the probability exceeds certian threshold, the attainable speeds
+% drops to a certain fraction of the initial speed. For example if P(beset)>0.3, then
+% speed=0.1*speed.
+% This needs some more scientific justification, but can be implemented as
+% a first try now.
+indStuck=find(stuck>stuckThreshold);
+speedStuck(indStuck)=0.1*speed(indStuck);
+inverseSpeed2 = 1 ./speedStuck;
+
+
+% search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
 search.originX=search.originX-minX;
 search.originY=search.originY-minY;
 search.destinationX=search.destinationX-minX;
@@ -406,11 +431,15 @@ for i=1:1:sizePathReduced-1
     dist2(i)=sqrt((pathReduced(i+1,2)-pathReduced(i,2))^2+(pathReduced(i+1,1)-pathReduced(i,1))^2);
     timeAlongPath(i)=(60.*dist(i))./speedAlongPath(i+1);
 end
-TimeAlongPath=sum(timeAlongPath); %Time in hours
+timeAlongPath=sum(timeAlongPath); %Time in hours
 %%
 
 %pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
 %     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
 %save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
-save('pathOutput20140307','pathMatrix','pathArray');
+
+FileName=['path',datestr(now, 'ddmmyyyy')];
+save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar_alternate/astar/results/' num2str(FileName)];
+save(filename,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 
