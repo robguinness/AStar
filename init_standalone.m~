@@ -95,7 +95,7 @@ tic
 clc
 clear all
 close all
-%hold on
+hold on
 startTime = tic;
 
 %% Set-up path
@@ -422,17 +422,15 @@ end
 timeAlongPath=sum(timeAlongPath); %Time in hours
 %% Saving relevant information in RESULTS directory
 
-% FileName=['path',datestr(now, 'ddmmyyyy')];
-% filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar/results/' num2str(FileName) '.mat'];
-% save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+%pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
+%     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
+%save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
 
-%% Saving relevant information as text files
+FileName=['path',datestr(now, 'ddmmyyyy')];
+filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar/results/' num2str(FileName) '.mat'];
+%save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 
-pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
-writetable(pC,'pathCoordinates.txt');
-
-sAP=array2table(speedAlongPath','VariableNames',{'knots'}); 
-writetable(sAP,'speedAlongPath.txt');
-
-tAP=array2table(timeAlongPath','VariableNames',{'hours'}); 
-writetable(tAP,'timeAlongPath.txt');
+% saving route details in a text file 
+T=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
+writetable(T,'output.txt');
