@@ -446,3 +446,6 @@ filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimizat
 %save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 
+% saving route details in a text file 
+T=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
+writetable(T,'output.txt');
