@@ -79,7 +79,9 @@
 %
 % shipTrackXY
 %
-% stuckThresholds
+% stuckThresholds   if the probability of a ship getting stuck in ice exceeds certian threshold, the attainable speeds
+%                   drops to a certain fraction of the initial speed. For example if P(beset)>0.3 (0.3 as a threshold), then
+%                   speed=0.1*speed. This needs some more scientific justification, but can be implemented as a first try now.
 %
 % MARGIN
 
@@ -132,18 +134,17 @@ OuluLat=65;         OuluLong=25.12;
 KemiLat=65.7;       KemiLong=25.55;
 LuleaLat=65.5;      LuleaLong=22.4;
 
-% Define startPos
-promptLat='Start Lat ';
-promptLong='Start Long ';
-search.originLat = input(promptLat);       % Lat coordinate
-search.originLong = input(promptLong);      % Long coordinate
+% Define startPos from external .txt file
+arrivalInput=readtable('arrivalCoordinates');
+search.originLat = table2array(arrivalInput(1,1));       % Lat coordinate
+search.originLong = table2array(arrivalInput(1,2));      % Long coordinate
+clearvars arrivalInput
 
-% Define finishPos
-prompt2Lat='Destination Lat ';
-prompt2Long='Destination Long ';
-
-search.destinationLat = input(prompt2Lat);   % Lat coordinate
-search.destinationLong = input(prompt2Long);  % Long coordinate
+% Define finishPos from external .txt file
+departureInput=readtable('departureCoordinates');
+search.destinationLat = table2array(departureInput(1,1));   % Lat coordinate
+search.destinationLong = table2array(departureInput(1,2));  % Long coordinate
+clearvars departureInput
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
@@ -162,10 +163,8 @@ fprintf('Calculating geographic coordinates...')
 % x,y-coordinates of origin are calculated based on Lat, Long input
 [search.originX,search.originY]=calcXY(latitude, longitude, search.originLat,search.originLong);
 [search.destinationX,search.destinationY]=calcXY(latitude, longitude, search.destinationLat,search.destinationLong);
-
 [HELMI.originX,HELMI.originY]=calcXY(latitude, longitude, HELMI.originLat,HELMI.originLong);
 [HELMI.destinationX,HELMI.destinationY]=calcXY(latitude, longitude, HELMI.destinationLat,HELMI.destinationLong);
-
 
 %subset of GEBCO defining the search area
 % XY coordinates of HELMI grid: SW(2727,809), NE(4369,1919)
@@ -183,12 +182,9 @@ fprintf('done.\n')
 %URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	4	59.83333333	25.43333333
 %URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	5	59.91666667	26
 %URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	6	60.08333333	26.26666667
-waypointsLatLong = [59.4333333333333, 23; ...
-    59.55, 24.1333333333333; ...
-    59.73333333, 24.61666667; ...
-    59.83333333,	25.43333333; ...
-    59.91666667,	26;...
-    60.08333333,	26.26666667;];
+
+waypointsLatLong = readtable('waypointsIB');
+waypointsLatLong=table2array(waypointsLatLong);
 
 %% Load saved data
 
@@ -257,7 +253,6 @@ indStuck=find(stuck>stuckThreshold);
 speedStuck=speed;
 speedStuck(indStuck)=0.1*speed(indStuck);
 inverseSpeed = 1 ./speedStuck;
-
 
 % search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
 search.originX=search.originX-minX;
