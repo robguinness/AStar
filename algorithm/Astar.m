@@ -103,14 +103,16 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                        
             % Draw current position in blue (unless it's the start or
             % target cell.
-            if (drawOption && ~((currentNode.x == search.originX) && (currentNode.y == search.originY) || (currentNode.x == search.destinationX) && (currentNode.y == search.destinationY)) )
-               plotPoint([currentNode.x, currentNode.y], 'b');
-            end
             
-            % Update drawing
-            if (mod(i,updateInterval)==0)
-                drawnow
-            end
+% This section is commented for Matlab standalone version
+%             if (drawOption && ~((currentNode.x == search.originX) && (currentNode.y == search.originY) || (currentNode.x == search.destinationX) && (currentNode.y == search.destinationY)) )
+%                plotPoint([currentNode.x, currentNode.y], 'b');
+%             end
+%             
+%             % Update drawing
+%             if (mod(i,updateInterval)==0)
+%                 drawnow
+%             end
             
             % Increment counter
             i = i + 1;
@@ -153,10 +155,12 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
 
                                 % Draw current position, shade of
                                 % yellow/orange indicates Fcost
-                                if (drawOption && ~((neighbor.x== search.originX) && (neighbor.y== search.originY) || (neighbor.x== search.destinationX) && (neighbor.y== search.destinationY)) )
-                                    colorIndex = getColorIndex(tmpFcost, minFcost);
-                                    plotPoint([neighbor.x, neighbor.y], cm(colorIndex,:));
-                                end
+                                
+% This section is commented for Matlab standalone version
+%                                 if (drawOption && ~((neighbor.x== search.originX) && (neighbor.y== search.originY) || (neighbor.x== search.destinationX) && (neighbor.y== search.destinationY)) )
+%                                     colorIndex = getColorIndex(tmpFcost, minFcost);
+%                                     plotPoint([neighbor.x, neighbor.y], cm(colorIndex,:));
+%                                 end
                                 
                             else % i.e. whichList(neighbor.x,neighbor.y) == onOpenList
                                 
@@ -233,11 +237,12 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             
             pathArray(pathLength,1) = pathX;
             pathArray(pathLength,2) = pathY;
-        
-            % Draw return path in magenta
-            if (drawOption && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
-                plotPoint([pathX, pathY], 'c');
-            end
+
+% This section is commented for Matlab standalone version
+%             % Draw return path in magenta
+%             if (drawOption && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
+%                 plotPoint([pathX, pathY], 'c');
+%             end
             
 
             
@@ -253,7 +258,8 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
     end
     
     pathArray = [search.destinationX search.destinationY; pathArray(1:pathLength,:)];
-    plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
+% This line is commented for Matlab standalone version
+%     plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
     
     if (smoothingOn)
        performSmoothing(whichList, pathArray); 

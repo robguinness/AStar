@@ -132,12 +132,12 @@ KemiLat=65.7;       KemiLong=25.55;
 LuleaLat=65.5;      LuleaLong=22.4;
 
 % Define startPos
-search.originLat = TallinnLat;       % Lat coordinate
-search.originLong = TallinnLong;      % Long coordinate
+search.originLat = HelsinkiLat;       % Lat coordinate
+search.originLong = HelsinkiLong;      % Long coordinate
 
 % Define finishPos
-search.destinationLat = HelsinkiLat;   % Lat coordinate
-search.destinationLong = HelsinkiLong;  % Long coordinate
+search.destinationLat = TallinnLat;   % Lat coordinate
+search.destinationLong = TallinnLong;  % Long coordinate
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
@@ -241,7 +241,7 @@ stuck=fliplr(stuck');
 
 % Combining the speed of a ship with the probability of getting beset in
 % ice, if the probability exceeds certian threshold, the attainable speeds
-% drops to a certain fraction of the initial speed. For example if P(beset)>0.3, then
+% drops to a certain fraction of the initial speed. For example if P(beset)>0.3 (0.3 as a threshold), then
 % speed=0.1*speed.
 % This needs some more scientific justification, but can be implemented as
 % a first try now.
@@ -263,29 +263,29 @@ whichList = sparse(mapCols, mapRows);
 
 %% Historical ship data
 
-fprintf('Loading ship tracks...')
-sh = loadShipTrack(latitude, longitude);
-fprintf('done.\n')
-
-fprintf('Plotting ship tracks...')
-numInTrack = size(sh,1);
-trackPoints = zeros(numInTrack,2);
-prevX = 0;
-prevY = 0;
-j=1;
-for i=1:numInTrack
-    [X, Y] = calcXY(latitude,longitude,sh(i,1),sh(i,2));
-    if (X~=prevX || Y~=prevY)
-        trackPoints(j,:) = [X, Y];
-        j=j+1;
-        prevX = X;
-        prevY = Y;
-    end
-
-end
-trackPoints = trackPoints(1:j-1,:);
-plot(trackPoints(:,1),trackPoints(:,2),'y*-');
-fprintf('done.\n')
+% fprintf('Loading ship tracks...')
+% sh = loadShipTrack(latitude, longitude);
+% fprintf('done.\n')
+% 
+% fprintf('Plotting ship tracks...')
+% numInTrack = size(sh,1);
+% trackPoints = zeros(numInTrack,2);
+% prevX = 0;
+% prevY = 0;
+% j=1;
+% for i=1:numInTrack
+%     [X, Y] = calcXY(latitude,longitude,sh(i,1),sh(i,2));
+%     if (X~=prevX || Y~=prevY)
+%         trackPoints(j,:) = [X, Y];
+%         j=j+1;
+%         prevX = X;
+%         prevY = Y;
+%     end
+% 
+% end
+% trackPoints = trackPoints(1:j-1,:);
+% plot(trackPoints(:,1),trackPoints(:,2),'y*-');
+% fprintf('done.\n')
 
 %% Define obstacles
 
@@ -297,24 +297,24 @@ indexObstacles = find(fliplr(depthMask')==1);
 whichList(indexObstacles) = UNAVIGABLE;
 fprintf('done.\n')
 
-%% Plot sea environment
+%% Plot sea environment - this section is commented for Matlab standalone version 
 
-% Normalize the speed values to be between 0 and 63;
-speedNormalized = normalize(speed)*63;
-
-% Assign obstacles a value of 64 (highest in colormap
-speedNormalized(indexObstacles) = 64;
-
-% set up colormap
-colormap cool
-cmap = colormap;
-cmap(64,:) = [0 0 0];
-colormap(cmap);
-
-% plot the matrix and do other setup
-image(speedNormalized')
-axis([1 mapCols 1 mapRows])
-colorbar
+% % Normalize the speed values to be between 0 and 63;
+% speedNormalized = normalize(speed)*63;
+% 
+% % Assign obstacles a value of 64 (highest in colormap
+% speedNormalized(indexObstacles) = 64;
+% 
+% % set up colormap
+% colormap cool
+% cmap = colormap;
+% cmap(64,:) = [0 0 0];
+% colormap(cmap);
+% 
+% % plot the matrix and do other setup
+% image(speedNormalized')
+% axis([1 mapCols 1 mapRows])
+% colorbar
 
 %% Set up continent data
 
@@ -324,14 +324,13 @@ indexContinents = find(continentMask'==1);
 % Assign these as unnavigable in whichList
 whichList(indexContinents) = CONTINENT;
 
-%% Plot origin and destination points
+%% Plot origin and destination points - this section is commented for Matlab standalone version 
+% fprintf('Plotting start and finish points...')
+% plotPoint([search.originX, search.originY],'r');
+% plotPoint([search.destinationX, search.destinationY], 'r');
+% fprintf('done.\n')
 
-fprintf('Plotting start and finish points...')
-plotPoint([search.originX, search.originY],'r');
-plotPoint([search.destinationX, search.destinationY], 'r');
-fprintf('done.\n')
-
-%% Plot ice breaker waypoints
+%% Plot ice breaker waypoints - plotting WP disabled for standalone version
 
 fprintf('Plotting ice breaker waypoints...')
 
@@ -342,7 +341,7 @@ for i=1:numWaypoints
     [X, Y] = calcXY(latitude,longitude,waypointsLatLong(i,1),waypointsLatLong(i,2));
     waypoints(i,:) = [X, Y];
 end
-scatter(waypoints(:,1),waypoints(:,2),'b*');
+%scatter(waypoints(:,1),waypoints(:,2),'b*');
 fprintf('done.\n')
 
 %% plot boundaries
@@ -406,7 +405,7 @@ end
 %% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path
 [latout,lonout] = reducem(pathArray(:,2),pathArray(:,1));
 pathReduced=[latout, lonout];
-plot(pathReduced(:,2),pathReduced(:,1),'x');
+%plot(pathReduced(:,2),pathReduced(:,1),'x');
 
 sizePathReduced=size(pathReduced);
 for i=1:sizePathReduced
@@ -432,14 +431,14 @@ for i=1:1:sizePathReduced-1
     timeAlongPath(i)=(60.*dist(i))./speedAlongPath(i+1);
 end
 timeAlongPath=sum(timeAlongPath); %Time in hours
-%%
+%% Saving relevant information in RESULTS directory
 
 %pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
 %     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
 %save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
 
 FileName=['path',datestr(now, 'ddmmyyyy')];
-save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
-filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar_alternate/astar/results/' num2str(FileName)];
-save(filename,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar/results/' num2str(FileName) '.mat'];
+%save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 
