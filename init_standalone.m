@@ -7,6 +7,8 @@
 %   v0.1      24.2.2016      R. Guinness                none
 %   v0.2      24.05.2016     J. Montewka 
 %   v0.3      26.08.2016     J. Montewka              attempts to make the standalone version without plotting 
+%   v0.4      08.09.2016     J. Montewka              iput output as text files
+
 
 % DEFINITIONS: (change definitions only with great caution!
 % 
