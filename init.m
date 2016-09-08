@@ -78,9 +78,17 @@
 %
 % shipTrackXY
 %
-% stuckThresholds
+% stuckThresholds is a value for the probability of a ship getting stuck in
+% ice. Above the threshold the speed of a ship is reduced. Below the speed
+% is not affected. The amount of reduction is assigned arbitrarly at the
+% moment. However it needs further investigation.
+
 %
-% MARGIN
+% MARGIN - the value used to enlarge the search area for the algorithm.  
+% It adds a certain number of cells to all directions, based on LAT and 
+% LONG of point of origin and point of desitnation.
+
+% speedAalto matrix contains speed and stuck files, both of size 556x830
 
 disp('Initializing the program...')
 
@@ -132,23 +140,37 @@ KemiLat=65.7;       KemiLong=25.55;
 LuleaLat=65.5;      LuleaLong=22.4;
 
 % Define startPos
+<<<<<<< HEAD
 search.originLat = HelsinkiLat;       % Lat coordinate
 search.originLong = HelsinkiLong;      % Long coordinate
 
 % Define finishPos
 search.destinationLat = TallinnLat;   % Lat coordinate
 search.destinationLong = TallinnLong;  % Long coordinate
+=======
+search.originLat = VasaaLat;       % Lat coordinate
+search.originLong = VasaaLong;      % Long coordinate
+
+% Define finishPos
+search.destinationLat = KokkolaLat;   % Lat coordinate
+search.destinationLong = KokkolaLong;  % Long coordinate
+>>>>>>> origin/AStarOnMyComputer
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
 LongW = -6;                 % the weternmost longitude of the GEBCO depth matrix (negative is west)
 LatRows = 2400;             % the number of rows in the GEBCO grid
 LongCols = 4800;            % the number of rows in the GEBCO grid
-% LAT,LONG coordinates of HELMI grid: point of origin SW(56.74N, 016.72E), point of desitnation NE(65.99,030.48)
+% LAT,LONG coordinates of HELMI grid: point of origin SW(56.74N, 016.72E),
+% point of desitnation NE(65.99,030.48), MARGIN
 HELMI.originLat=56.74;
 HELMI.originLong=16.72;
 HELMI.destinationLat=65.99;
 HELMI.destinationLong=30.48;
+MARGIN=200;
+
+% Threshold for ship beset in ice probability
+stuckThreshold=0.3;
 
 %% Calculate geographic coordinates
 fprintf('Calculating geographic coordinates...')
@@ -160,11 +182,8 @@ fprintf('Calculating geographic coordinates...')
 [HELMI.originX,HELMI.originY]=calcXY(latitude, longitude, HELMI.originLat,HELMI.originLong);
 [HELMI.destinationX,HELMI.destinationY]=calcXY(latitude, longitude, HELMI.destinationLat,HELMI.destinationLong);
 
-
 %subset of GEBCO defining the search area
 % XY coordinates of HELMI grid: SW(2727,809), NE(4369,1919)
-stuckThreshold=0.3;
-MARGIN=200;
 [minX, maxX, minY, maxY]=calculateSearchArea(search.originX, search.originY, search.destinationX, search.destinationY,MARGIN);
 
 fprintf('done.\n')
@@ -226,12 +245,11 @@ S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HEL
 speed=S;
 speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
 speed=fliplr(speed');
-inverseSpeed = 1 ./speed;
+inverseSpeed2 = 1 ./speed;
 clear S;
 
 % Here the matrix determining the probability of ship getting best in ice is
 % introduced, based on AALTO's model
-
 stuck2=repelem(stuck,2,2);
 S=sparse(2400,4800);
 S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=stuck2;
@@ -245,10 +263,9 @@ stuck=fliplr(stuck');
 % speed=0.1*speed.
 % This needs some more scientific justification, but can be implemented as
 % a first try now.
-indStuck=find(stuck>stuckThreshold);
-speedStuck(indStuck)=0.1*speed(indStuck);
-inverseSpeed2 = 1 ./speedStuck;
-
+speedStuck=speed;
+speedStuck(stuck>stuckThreshold)=0.1.*speed(stuck>stuckThreshold);
+inverseSpeed = 1./speedStuck;
 
 % search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
 search.originX=search.originX-minX;
@@ -437,8 +454,14 @@ timeAlongPath=sum(timeAlongPath); %Time in hours
 %     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
 %save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
 
+%% Saving relevant matrices to a file and putting it into a folder called result
 FileName=['path',datestr(now, 'ddmmyyyy')];
+<<<<<<< HEAD
 filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar/results/' num2str(FileName) '.mat'];
 %save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
 save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+=======
+filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar_alternate/astar/results/' num2str(FileName)];
+save(filename,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
+>>>>>>> origin/AStarOnMyComputer
 
