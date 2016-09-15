@@ -16,7 +16,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
     
     minFcost = 10*sqrt((search.originX - search.destinationX)^2 + (search.originY - search.destinationY)^2) / maxSpeed;
     
-    cm = colormap;
+    %cm = colormap;
 
     mapWidth = size(whichList, 1);
     mapHeight = size(whichList, 2);
