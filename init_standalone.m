@@ -8,6 +8,7 @@
 %   v0.2      24.05.2016     J. Montewka 
 %   v0.3      26.08.2016     J. Montewka              attempts to make the standalone version without plotting 
 %   v0.4      08.09.2016     J. Montewka              input output as text files
+%   v0.5      30.09.2016                              drawing options cleared
 
 
 % DEFINITIONS: (change definitions only with great caution!

@@ -8,6 +8,7 @@
 %   v0.2      24.05.2016     J. Montewka 
 %   v0.3      26.08.2016     J. Montewka              attempts to make the standalone version without plotting 
 %   v0.4      08.09.2016     J. Montewka              input output as text files
+%   v0.5      30.09.
 
 
 % DEFINITIONS: (change definitions only with great caution!
@@ -97,7 +98,7 @@ tic
 clc
 clear all
 close all
-hold on
+%hold on
 startTime = tic;
 
 %% Set-up path
@@ -128,11 +129,16 @@ if drawAll
     drawInitial = true; % don't modify
     drawUpdates = true; % don't modify
     drawResults = true; % don't modify
+    hold on
+else
+    drawInitial = false; % don't modify
+    drawUpdates = false; % don't modify
+    drawResults = false; % don't modify
 end
 
-drawInitial = true; %drawing initial set up for the algorithm
-drawUpdates = false; %updating figure while the algorithm is running
-drawResults = true; %drawing the reduced path obtained form A*
+%drawInitial = true; %drawing initial set up for the algorithm
+%drawUpdates = false; %updating figure while the algorithm is running
+%drawResults = true; %drawing the reduced path obtained form A*
 
 
 useSaved = false;
@@ -358,8 +364,9 @@ fprintf('Starting A* algorithm...')
 pathReduced=[latout, longout];
 
 if drawResults
+    % 0.5 is subtracted for visualization purposes
     plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
-    plot(pathReduced(:,2),pathReduced(:,1),'x');
+    plot(pathReduced(:,2)-0.5,pathReduced(:,1)-0.5,'x');
 end
 
 sizePathReduced=size(pathReduced);
