@@ -1,12 +1,16 @@
 
 % Function to find path, gets start and finish coordinates
-function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, delayOption, drawUpdate, smoothingOn, startTime)
+function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
     addpath algorithm/subroutines
     addpath algorithm/classes
     
     
     updateInterval = 10;
     
+    if drawUpdates
+        cm = colormap;
+    end
+
     pathArray = [];
     
     iceBreakerDistThreshold = 1.5;
@@ -16,8 +20,6 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
     
     minFcost = 10*sqrt((search.originX - search.destinationX)^2 + (search.originY - search.destinationY)^2) / maxSpeed;
     
-    %cm = colormap;
-
     mapWidth = size(whichList, 1);
     mapHeight = size(whichList, 2);
 
@@ -70,9 +72,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
     % Create an inifinite loop (until goal is reached or defined unreachable
     while (1)
         
-        % cause a delay (if specified)
-        performDelay(delayOption)
-        
+               
         % Check if there are any members in the open list
         if (openListNew.size ~= 0)
             
@@ -104,15 +104,14 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             % Draw current position in blue (unless it's the start or
             % target cell.
             
-% This section is commented for Matlab standalone version
-%             if (drawOption && ~((currentNode.x == search.originX) && (currentNode.y == search.originY) || (currentNode.x == search.destinationX) && (currentNode.y == search.destinationY)) )
-%                plotPoint([currentNode.x, currentNode.y], 'b');
-%             end
-%             
-%             % Update drawing
-%             if (mod(i,updateInterval)==0)
-%                 drawnow
-%             end
+            if (drawUpdates && ~((currentNode.x == search.originX) && (currentNode.y == search.originY) || (currentNode.x == search.destinationX) && (currentNode.y == search.destinationY)) )
+               plotPoint([currentNode.x, currentNode.y], 'b');
+            end
+            
+            % Update drawing
+            if (mod(i,updateInterval)==0)
+                drawnow
+            end
             
             % Increment counter
             i = i + 1;
@@ -134,6 +133,13 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             % If not on the open list, add it
                             if (whichList(neighbor.x,neighbor.y) ~= onOpenList)
 
+                                % Calculate current time
+                                currentT
+
+                                % Calculate time coordinate for
+                                % inverseSpeed Matrix
+                                timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                
                                 % Calculate its G cost
                                 addedGCost = calculateGCost3(currentNode.x, currentNode.y,neighbor.x,neighbor.y,j,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
 
@@ -156,11 +162,11 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                                 % Draw current position, shade of
                                 % yellow/orange indicates Fcost
                                 
-% This section is commented for Matlab standalone version
-%                                 if (drawOption && ~((neighbor.x== search.originX) && (neighbor.y== search.originY) || (neighbor.x== search.destinationX) && (neighbor.y== search.destinationY)) )
-%                                     colorIndex = getColorIndex(tmpFcost, minFcost);
-%                                     plotPoint([neighbor.x, neighbor.y], cm(colorIndex,:));
-%                                 end
+
+                                if (drawUpdates && ~((neighbor.x== search.originX) && (neighbor.y== search.originY) || (neighbor.x== search.destinationX) && (neighbor.y== search.destinationY)) )
+                                    colorIndex = getColorIndex(tmpFcost, minFcost);
+                                    plotPoint([neighbor.x, neighbor.y], cm(colorIndex,:));
+                                end
                                 
                             else % i.e. whichList(neighbor.x,neighbor.y) == onOpenList
                                 
@@ -239,11 +245,10 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
             pathArray(pathLength,2) = pathY;
 
             % Draw return path in magenta
-            if (drawOption && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
+            if (drawUpdates && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
                 plotPoint([pathX, pathY], 'c');
             end
             
-
             
             % If starting position reached, break out of the loop
             if ( (pathX == search.originX) && (pathY == search.originY) )
@@ -256,9 +261,8 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
         
     end
     
-    pathArray = [search.destinationX search.destinationY; pathArray(1:pathLength,:)];
-% This line is commented for Matlab standalone version
-%     plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
+    pathArray = [search.destinationX search.destinationY; pathArray(1:pathLength,:)]; 
+    
     
     if (smoothingOn)
        performSmoothing(whichList, pathArray); 
@@ -267,24 +271,6 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
    %pathMatrix = flipud(pathMatrix);
 end
 
-function performDelay(delayOption)
-        % Check the delay option
-        % 1 - no delay
-        % 2 - 0.1s delay
-        % 3 - 0.15s delay
-        % 4 - wait for input
-        switch delayOption
-            case 1
-                % No delay
-            case 2
-                pause(0.1);
-            case 3
-                pause(0.15);
-            case 4;
-                disp('Press any key (for example space) for next step');
-                pause;
-        end
-end
 
 function colorIndex = getColorIndex(fCost, minFcost)
   colorIndex = round((minFcost / fCost )^3*63)+1;
