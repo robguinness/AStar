@@ -6,7 +6,10 @@
 % (ver. #)   (date)        (author of new version)    (see notes)
 %   v0.1      24.2.2016      R. Guinness                none
 %   v0.2      24.05.2016     J. Montewka 
-%
+%   v0.3      26.08.2016     J. Montewka              attempts to make the standalone version without plotting 
+%   v0.4      08.09.2016     J. Montewka              input output as text files
+
+
 % DEFINITIONS: (change definitions only with great caution!
 % 
 % search         data structure containing information about the origin point and
@@ -78,17 +81,14 @@
 %
 % shipTrackXY
 %
-% stuckThresholds is a value for the probability of a ship getting stuck in
-% ice. Above the threshold the speed of a ship is reduced. Below the speed
-% is not affected. The amount of reduction is assigned arbitrarly at the
-% moment. However it needs further investigation.
-
+% stuckThresholds   if the probability of a ship getting stuck in ice exceeds certian threshold, the attainable speeds
+%                   drops to a certain fraction of the initial speed. For example if P(beset)>0.3 (0.3 as a threshold), then
+%                   speed=0.1*speed. This needs some more scientific justification, but can be implemented as a first try now.
 %
-% MARGIN - the value used to enlarge the search area for the algorithm.  
-% It adds a certain number of cells to all directions, based on LAT and 
-% LONG of point of origin and point of desitnation.
+% Margin            the value used to enlarge the search area for the algorithm. It adds a certain number of cells to all directions, based on LAT and 
+%                   LONG of point of origin and point of desitnation.
 
-% speedAalto matrix contains speed and stuck files, both of size 556x830
+% speedAalto        matrix contains speed and stuck files, both of size 556x830
 
 disp('Initializing the program...')
 
@@ -97,7 +97,7 @@ tic
 clc
 clear all
 close all
-hold on
+%hold on
 startTime = tic;
 
 %% Set-up path
@@ -121,56 +121,57 @@ global CONTINENT; CONTINENT= 5;
 
 %% Run-time parameters
 smoothingOn = false;
-drawOpt = true;
+drawAll=false;
+
+% if drawAll set to true, above options are all set to true
+if drawAll
+    drawInitial = true; % don't modify
+    drawUpdates = true; % don't modify
+    drawResults = true; % don't modify
+    hold on
+else
+    drawInitial = false; % don't modify
+    drawUpdates = false; % don't modify
+    drawResults = false; % don't modify
+end
+
+%drawInitial = true; %drawing initial set up for the algorithm
+%drawUpdates = false; %updating figure while the algorithm is running
+%drawResults = true; %drawing the reduced path obtained form A*
+
+
 useSaved = false;
-speedOpt = 1;   % 1 = full speed
 
-%% Define search parameters
-TallinnLat=59.52;   TallinnLong=24.7;
-HelsinkiLat=60.1;  HelsinkiLong=24.95;
-HankoLat=59.73;     HankoLong=23;
-KotkaLat=60.4;      KotkaLong=26.9;
-BalticLat=58;       BalticLong=20.5;
-RigaLat=57.1;       RigaLong=23.9;
-TurkuLat=60.4;      TurkuLong=22.1;
-VaasaLat=63.283;      VaasaLong=20.608;
-KokkolaLat=63.983;    KokkolaLong=22.866;
-OuluLat=65;         OuluLong=25.12;
-KemiLat=65.7;       KemiLong=25.55;
-LuleaLat=65.5;      LuleaLong=22.4;
+%% Define search parameters and IB waypoints
 
-% Define startPos
-<<<<<<< HEAD
-search.originLat = HelsinkiLat;       % Lat coordinate
-search.originLong = HelsinkiLong;      % Long coordinate
+% Define arrival, departure positions and the threshold for the probability for a ship being stuck from external .txt file
+departureInput=readtable('INdepartureCoordinates');
+search.originLat = table2array(departureInput(1,1));       % Lat coordinate
+search.originLong = table2array(departureInput(1,2));      % Long coordinate
+clearvars departureInput
 
-% Define finishPos
-search.destinationLat = TallinnLat;   % Lat coordinate
-search.destinationLong = TallinnLong;  % Long coordinate
-=======
-search.originLat = VasaaLat;       % Lat coordinate
-search.originLong = VasaaLong;      % Long coordinate
+arrivalInput=readtable('INarrivalCoordinates');
+search.destinationLat = table2array(arrivalInput(1,1));   % Lat coordinate
+search.destinationLong = table2array(arrivalInput(1,2));  % Long coordinate
+clearvars arrivalInput
 
-% Define finishPos
-search.destinationLat = KokkolaLat;   % Lat coordinate
-search.destinationLong = KokkolaLong;  % Long coordinate
->>>>>>> origin/AStarOnMyComputer
+stuckInput=readtable('INstuckThreshold');
+stuckThreshold=table2array(stuckInput(1,1));
+
+% Define ice breaker waypoints
+waypointsLatLong = readtable('INwaypointsIB');
+waypointsLatLong=table2array(waypointsLatLong);
 
 % GEBCO depth matrix definition
 LatN = 70;                  % the northernmost latitude of the GEBCO depth matrix
 LongW = -6;                 % the weternmost longitude of the GEBCO depth matrix (negative is west)
 LatRows = 2400;             % the number of rows in the GEBCO grid
 LongCols = 4800;            % the number of rows in the GEBCO grid
-% LAT,LONG coordinates of HELMI grid: point of origin SW(56.74N, 016.72E),
-% point of desitnation NE(65.99,030.48), MARGIN
+% LAT,LONG coordinates of HELMI grid: point of origin SW(56.74N, 016.72E), point of desitnation NE(65.99,030.48)
 HELMI.originLat=56.74;
 HELMI.originLong=16.72;
 HELMI.destinationLat=65.99;
 HELMI.destinationLong=30.48;
-MARGIN=200;
-
-% Threshold for ship beset in ice probability
-stuckThreshold=0.3;
 
 %% Calculate geographic coordinates
 fprintf('Calculating geographic coordinates...')
@@ -178,30 +179,15 @@ fprintf('Calculating geographic coordinates...')
 % x,y-coordinates of origin are calculated based on Lat, Long input
 [search.originX,search.originY]=calcXY(latitude, longitude, search.originLat,search.originLong);
 [search.destinationX,search.destinationY]=calcXY(latitude, longitude, search.destinationLat,search.destinationLong);
-
 [HELMI.originX,HELMI.originY]=calcXY(latitude, longitude, HELMI.originLat,HELMI.originLong);
 [HELMI.destinationX,HELMI.destinationY]=calcXY(latitude, longitude, HELMI.destinationLat,HELMI.destinationLong);
 
 %subset of GEBCO defining the search area
 % XY coordinates of HELMI grid: SW(2727,809), NE(4369,1919)
+MARGIN=200;
 [minX, maxX, minY, maxY]=calculateSearchArea(search.originX, search.originY, search.destinationX, search.destinationY,MARGIN);
 
 fprintf('done.\n')
-
-% Define ice breaker waypoints
-
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	1	59.43333333	23
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	2	59.55	24.13333333
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	3	59.73333333	24.61666667
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	4	59.83333333	25.43333333
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	5	59.91666667	26
-%URH	Urho 2602	26.2.2011 18:37	5.3.2011 10:17	6	60.08333333	26.26666667
-waypointsLatLong = [59.4333333333333, 23; ...
-    59.55, 24.1333333333333; ...
-    59.73333333, 24.61666667; ...
-    59.83333333,	25.43333333; ...
-    59.91666667,	26;...
-    60.08333333,	26.26666667;];
 
 %% Load saved data
 
@@ -237,6 +223,7 @@ continentMask = continentMask(minY:maxY,minX:maxX);
 % The X,Y coordinates of HELMI grid are hard-coded here (810:1921,2724:4383)
 % The aim is to have speed matrix oriented so, that its originates in SW corner
 % of a map, and its rows correspond to Longitude and column to Latitude
+
 speed2=repelem(speed,2,2);
 S=sparse(2400,4800);
 sizeS=size(S);
@@ -245,13 +232,16 @@ S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HEL
 speed=S;
 speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
 speed=fliplr(speed');
-inverseSpeed2 = 1 ./speed;
+speed=full(speed);
+inverseSpeed = 1 ./speed;
 clear S;
 
 % Here the matrix determining the probability of ship getting best in ice is
 % introduced, based on AALTO's model
+
 stuck2=repelem(stuck,2,2);
 S=sparse(2400,4800);
+sizeS=size(S);
 S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=stuck2;
 stuck=S;
 stuck = stuck((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
@@ -263,9 +253,10 @@ stuck=fliplr(stuck');
 % speed=0.1*speed.
 % This needs some more scientific justification, but can be implemented as
 % a first try now.
+indStuck=find(stuck>stuckThreshold);
 speedStuck=speed;
-speedStuck(stuck>stuckThreshold)=0.1.*speed(stuck>stuckThreshold);
-inverseSpeed = 1./speedStuck;
+speedStuck(indStuck)=0.1*speed(indStuck);
+inverseSpeed = 1 ./speedStuck;
 
 % search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList
 search.originX=search.originX-minX;
@@ -314,115 +305,68 @@ indexObstacles = find(fliplr(depthMask')==1);
 whichList(indexObstacles) = UNAVIGABLE;
 fprintf('done.\n')
 
-%% Plot sea environment - this section is commented for Matlab standalone version 
-
-% % Normalize the speed values to be between 0 and 63;
-% speedNormalized = normalize(speed)*63;
-% 
-% % Assign obstacles a value of 64 (highest in colormap
-% speedNormalized(indexObstacles) = 64;
-% 
-% % set up colormap
-% colormap cool
-% cmap = colormap;
-% cmap(64,:) = [0 0 0];
-% colormap(cmap);
-% 
-% % plot the matrix and do other setup
-% image(speedNormalized')
-% axis([1 mapCols 1 mapRows])
-% colorbar
-
 %% Set up continent data
-
 % Get "continent" indices from paths
 indexContinents = find(continentMask'==1);
 
 % Assign these as unnavigable in whichList
 whichList(indexContinents) = CONTINENT;
-
-%% Plot origin and destination points - this section is commented for Matlab standalone version 
-% fprintf('Plotting start and finish points...')
-% plotPoint([search.originX, search.originY],'r');
-% plotPoint([search.destinationX, search.destinationY], 'r');
-% fprintf('done.\n')
-
-%% Plot ice breaker waypoints - plotting WP disabled for standalone version
-
-fprintf('Plotting ice breaker waypoints...')
-
-% Calculate ice breaker waypoints in [X, Y]
+%% Calculate ice breaker waypoints in [X, Y]
 numWaypoints = size(waypointsLatLong,1);
 waypoints = zeros(numWaypoints,2);
 for i=1:numWaypoints
     [X, Y] = calcXY(latitude,longitude,waypointsLatLong(i,1),waypointsLatLong(i,2));
     waypoints(i,:) = [X, Y];
 end
-%scatter(waypoints(:,1),waypoints(:,2),'b*');
-fprintf('done.\n')
 
-%% plot boundaries
-% fprintf('Plotting boundaries...')
-% s=1;
-% numberOfObjects = length(boundaries);
-% continents = cell(1,1);
-% for k = 1:numberOfObjects
-%         object = boundaries{k,1};
-%         boundary = [object(:,2), mapRows - object(:,1)];
-%         plot(boundary(:,1),boundary(:,2))
-%         penn = boundaries{k,2};
-%         if (penn == 1)
-%             continents(s,1) = {boundary};
-%             s = s+1;
-%         end
-% end
-% fprintf('done.\n')
+%% Plot sea environment - this section is commented for Matlab standalone version
+if drawInitial
+    
+    % Normalize the speed values to be between 0 and 63;
+    speedNormalized = normalize(speed)*63;
+    % Assign obstacles a value of 64 (highest in colormap
+    speedNormalized(indexObstacles) = 64;
+    % set up colormap
+    colormap cool
+    cmap = colormap;
+    cmap(64,:) = [0 0 0];
+    colormap(cmap);
+    % plot the matrix and do other setup
+    image(speedNormalized')
+    axis([1 mapCols 1 mapRows])
+    colorbar
 
+    % Plot origin and destination points - this section is commented for Matlab standalone version 
+    fprintf('Plotting start and finish points...')
+    plotPoint([search.originX, search.originY],'r');
+    plotPoint([search.destinationX, search.destinationY], 'r');
+    fprintf('done.\n')
 
-%% find penninsula points
-% comment the below line out, if you have already calculated pennPoints and
-% hList (speeds up the execution)
-%[pennPoints, hList] = findPenninsulaPoints4([0, mapCols, 0, mapRows], ...
-%               continents,startPos, finishPos);
+    % Plot ice breaker waypoints
+    fprintf('Plotting ice breaker waypoints...')
+    scatter(waypoints(:,1),waypoints(:,2),'b*');
+    fprintf('done.\n')
 
-%numHandles = size(hList,1);
-%for i=2:numHandles
-%    if ishandle(hList(i))
-%        delete(hList(i))
-%    end
-%end        
-%pennPoints = sortrows(pennPoints,3);
-%pennPoints = pennPoints(:,1:2);
-
-if ~isempty(pennPoints)
-    usePennPoints = true;
-else
-    usePennPoints = false;
 end
-toc
+
 timeForSetup = toc;
 fprintf('Time for set-up was %.2f seconds.\n',timeForSetup);
 
-%%
+%% Starting A* algorithm
 fprintf('Starting A* algorithm...')
-if usePennPoints
-    %pennPoints = [pennPoints; flipud(waypoints)];
-    %define P values
+[pathMatrix, pathArray] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime);
 
-    %Pvalues = findPvalues3(pennPoints, startPos, finishPos, whichList,boundaries, [0, mapCols, 0, mapRows]);
-    toc
-    % Call the Astar function
-    [pathMatrix, pathArray, Gcost, dist] = AstarPenn3(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
-       pennPoints, latitude, longitude, Pvalues, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn);
-else
-    [pathMatrix, pathArray] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, speedOpt, drawOpt, smoothingOn, startTime);
-end
 %update figure
 % drawnow;
 %% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path
-[latout,lonout] = reducem(pathArray(:,2),pathArray(:,1));
-pathReduced=[latout, lonout];
-%plot(pathReduced(:,2),pathReduced(:,1),'x');
+[latout,longout] = reducem(pathArray(:,2),pathArray(:,1));
+pathReduced=[latout, longout];
+
+if drawResults
+    % 0.5 is subtracted for visualization purposes
+    plot(pathArray(:,1)-0.5,pathArray(:,2)-0.5,'Color','r','LineWidth',3);
+    plot(pathReduced(:,2)-0.5,pathReduced(:,1)-0.5,'x');
+end
 
 sizePathReduced=size(pathReduced);
 for i=1:sizePathReduced
@@ -448,20 +392,16 @@ for i=1:1:sizePathReduced-1
     timeAlongPath(i)=(60.*dist(i))./speedAlongPath(i+1);
 end
 timeAlongPath=sum(timeAlongPath); %Time in hours
-%% Saving relevant information in RESULTS directory
 
-%pathMatrix = AstarPenn(startPos(1), startPos(2), finishPos(1), finishPos(2), ...
-%     pennPoints, Pvalues, whichList, speedOpt, drawOpt, smoothingOn); 
-%save('pathOutput20140307','pathMatrix','pathArray','Pvalues');
+%% Saving relevant information as text files
 
-%% Saving relevant matrices to a file and putting it into a folder called result
-FileName=['path',datestr(now, 'ddmmyyyy')];
-<<<<<<< HEAD
-filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar/results/' num2str(FileName) '.mat'];
-%save(FileName,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
-save(num2str(filename),'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
-=======
-filename=['/Users/montewka/Dropbox (MSG)/Scientific/Models/VORIC route optimization/AStar_alternate/astar/results/' num2str(FileName)];
-save(filename,'pathMatrix','pathArray', 'pathCoordinates', 'timeAlongPath', 'speedAlongPath');
->>>>>>> origin/AStarOnMyComputer
+pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
+writetable(pC,'OUTpathCoordinates.txt');
 
+sAP=array2table(speedAlongPath','VariableNames',{'knots'}); 
+writetable(sAP,'OUTspeedAlongPath.txt');
+
+tAP=array2table(timeAlongPath','VariableNames',{'hours'}); 
+writetable(tAP,'OUTtimeAlongPath.txt');
+
+clear all
