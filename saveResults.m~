@@ -8,6 +8,7 @@ function [pC,sAP,tAP] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath
 %       - path coordinates (pC)
 %       - speed along path (sAP)
 %       - time along path (tAP)
+
 t=datestr(now,'mmddyyyy_HHMM');
 
 pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
@@ -20,7 +21,3 @@ tAP=array2table(timeAlongPath','VariableNames',{'hours'});
 writetable(tAP,['results/' t '_OUTtimeAlongPath.txt']);
 
 end
-
-w = datetime('now','Format','dMMy_HHmm')
-dt=datestr(now,'mmddyyyy_HHMM')
-formatOut='mmddyyyy'; datestr(now,formatOut)

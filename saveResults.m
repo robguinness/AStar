@@ -8,6 +8,7 @@ function [pC,sAP,tAP] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath
 %       - path coordinates (pC)
 %       - speed along path (sAP)
 %       - time along path (tAP)
+
 t=datestr(now,'mmddyyyy_HHMM');
 
 pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
