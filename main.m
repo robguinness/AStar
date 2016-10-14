@@ -9,7 +9,7 @@ profile on
 %h = figure;
 
 %% Initializing routing algorithm
-[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed] = init2();
+[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed] = init();
 
 %% Starting A* algorithm
 fprintf('Starting A* algorithm...')
@@ -28,4 +28,5 @@ timeOverall=toc/60;
 t=datestr(now,'mmddyyyy_HHMM');
 save(['results/' t '_timeOverall.txt'], 'timeOverall', '-ascii');
 
-clear all
+profile viewer
+%clear all
