@@ -134,15 +134,15 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             if (whichList(neighbor.x,neighbor.y) ~= onOpenList)
 
                                 % Calculate current time
-                                currentTime = voyageStartTimeInSeconds + Gcost(currentNode.x,currentNode.y);
+                                %currentTime = voyageStartTimeInSeconds + Gcost(currentNode.x,currentNode.y);
 
                                 % Calculate time coordinate for
                                 % inverseSpeed Matrix
-                                timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                %timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
                                 
                                 % Calculate its G cost
                                 addedGCost = calculateGCost3(currentNode.x, currentNode.y,neighbor.x,neighbor.y,j,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
-
+                                                
                                 % Update Gcost map
                                 Gcost(neighbor.x,neighbor.y) = Gcost(currentNode.x,currentNode.y) + addedGCost;
 
