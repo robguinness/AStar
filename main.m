@@ -2,6 +2,7 @@ clc
 clear all
 close all
 tic
+profile on
 %% Create figure
 %h = figure;
 

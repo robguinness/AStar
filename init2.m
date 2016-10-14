@@ -109,6 +109,7 @@ addpath environment environment/penninsulas
 addpath ships
 addpath utilities
 addpath algorithm
+addpath geographiclib_toolbox
 
 %% Define data structures
 
