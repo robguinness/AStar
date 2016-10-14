@@ -365,12 +365,12 @@ fprintf('Starting A* algorithm...')
 %% Saving relevant information as text files
 
 pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
-writetable(pC,'OUTpathCoordinates.txt');
+writetable(pC,'results/OUTpathCoordinates.txt');
 
 sAP=array2table(speedAlongPath','VariableNames',{'knots'}); 
-writetable(sAP,'OUTspeedAlongPath.txt');
+writetable(sAP,'results/OUTspeedAlongPath.txt');
 
 tAP=array2table(timeAlongPath','VariableNames',{'hours'}); 
-writetable(tAP,'OUTtimeAlongPath.txt');
+writetable(tAP,'results/OUTtimeAlongPath.txt');
 
 %clear all

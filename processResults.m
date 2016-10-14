@@ -1,5 +1,8 @@
 function [pathCoordinates,speedAlongPath,timeAlongPath] = processResults(speed,drawResults,longitude,latitude,pathArray)
-%UNTITLED2 Summary of this function goes here
+%processResults(speed,drawResults,longitude,latitude,pathArray) processes
+%the results obtained in the course of optimization process carried out by
+%AStar algorithm
+
 %   Detailed explanation goes here
 
 %% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path

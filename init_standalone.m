@@ -363,14 +363,8 @@ fprintf('Starting A* algorithm...')
 [pathCoordinates,speedAlongPath,timeAlongPath] = processResults(speed,drawResults,longitude,latitude,pathArray);
 
 %% Saving relevant information as text files
+[pC,sAP,tAP] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath);
+datetime('now','InputFormat','YY-MM-DD-HH-MM-SS');
 
-pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
-writetable(pC,'OUTpathCoordinates.txt');
 
-sAP=array2table(speedAlongPath','VariableNames',{'knots'}); 
-writetable(sAP,'OUTspeedAlongPath.txt');
-
-tAP=array2table(timeAlongPath','VariableNames',{'hours'}); 
-writetable(tAP,'OUTtimeAlongPath.txt');
-
-%clear all
+clear all
