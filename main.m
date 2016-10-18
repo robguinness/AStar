@@ -9,7 +9,7 @@ profile on
 %h = figure;
 
 %% Initializing routing algorithm
-[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed] = init();
+[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed,voyageStartTime] = init();
 
 %% Starting A* algorithm
 fprintf('Starting A* algorithm...')

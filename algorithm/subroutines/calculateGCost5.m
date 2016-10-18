@@ -3,7 +3,8 @@
 % accurate geodetic distance (but is slower to compute however still faster than using calculateGCost4), whereas
 % calculateGCost3 uses precomputed geometric distances based on Euclidean distance.
 % Distance is given in meters, however the original output of DISTANC function is in degrees.
-
+% GCost is time elapsed from a starting point to a given point and is
+% expressed in seconds
 function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverseSpeed, waypoints, maxSpeed,distThreshold)
     lat1 = latitude(1,y1);
     long1 = longitude(x1,1);
@@ -22,7 +23,7 @@ function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverse
     [distanceFromLine] = distance2curve2(waypoints,x2,y2);
     %[~,distanceFromLine,~] = distance2curve(waypoints,[x2, y2]); %this function is overkill, but at least it works
     if (distanceFromLine < distThreshold)
-        gCost = dist / maxSpeed;
+        gCost = dist / maxSpeed; %distance in [m], speed in [m/s]
     else
         inverseSpeedInterp = interp2(inverseSpeed,cy_t,cx_t);
 

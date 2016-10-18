@@ -133,8 +133,11 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             % If not on the open list, add it
                             if (whichList(neighbor.x,neighbor.y) ~= onOpenList)
 
-                                % Calculate current time
-                                %currentTime = voyageStartTimeInSeconds + Gcost(currentNode.x,currentNode.y);
+                                % Calculate current time; GCost is given in
+                                % seconds, duration is given in hours, both
+                                % need to be made into the same time frame
+                                % hours:minutes:seconds
+                                currentTime = voyageStartTime + Gcost(currentNode.x,currentNode.y)/.86400; %duration is expressed in hours, thus GCost needs to be expressed as fraction of hours not seconds
 
                                 % Calculate time coordinate for
                                 % inverseSpeed Matrix

@@ -14,7 +14,7 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 %   v0.4      08.09.2016     J. Montewka              input output as text files
 %   v0.5      14.10.2016                              drawing options
 %                                                     cleared, code made into blocks
-
+%   v0.6      18.10.2016                              GCost calculated based on geodetic distance
 
 % DEFINITIONS: (change definitions only with great caution!
 % 
@@ -145,7 +145,9 @@ end
 useSaved = false;
 
 %% Define search parameters and IB waypoints
-
+voyageStartTime=readtable('voyageStartTime');
+voyageStartTime=table2array(voyageStartTime);
+voyageStartTime=duration(voyageStartTime(1,1),voyageStartTime(1,2),voyageStartTime(1,3)); %duration create duration array from numeric values
 % Define arrival, departure positions and the threshold for the probability for a ship being stuck from external .txt file
 departureInput=readtable('INdepartureCoordinates');
 search.originLat = table2array(departureInput(1,1));       % Lat coordinate
