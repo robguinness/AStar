@@ -141,7 +141,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                                 %timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
                                 
                                 % Calculate its G cost
-                                addedGCost = calculateGCost4(currentNode.x, currentNode.y,neighbor.x,neighbor.y,latitude, longitude,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
+                                addedGCost = calculateGCost5(currentNode.x, currentNode.y,neighbor.x,neighbor.y,latitude, longitude,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
                                                 
                                 % Update Gcost map
                                 Gcost(neighbor.x,neighbor.y) = Gcost(currentNode.x,currentNode.y) + addedGCost;
@@ -171,7 +171,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             else % i.e. whichList(neighbor.x,neighbor.y) == onOpenList
                                 
                                 % Calculate its G cost
-                                addedGCost = calculateGCost4(currentNode.x, currentNode.y, neighbor.x, neighbor.y, latitude, longitude, inverseSpeed, waypoints, maxSpeed, iceBreakerDistThreshold);
+                                addedGCost = calculateGCost5(currentNode.x, currentNode.y, neighbor.x, neighbor.y, latitude, longitude, inverseSpeed, waypoints, maxSpeed, iceBreakerDistThreshold);
                                 tempGcost = Gcost(currentNode.x,currentNode.y) + addedGCost;
 
                                 % If this path is shorter, change Gcost, Fcost and the parent cell

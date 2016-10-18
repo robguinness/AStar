@@ -29,4 +29,3 @@ t=datestr(now,'mmddyyyy_HHMM');
 save(['results/' t '_timeOverall.txt'], 'timeOverall', '-ascii');
 
 profile viewer
-%clear all
