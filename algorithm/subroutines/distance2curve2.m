@@ -9,7 +9,7 @@ function [distanceFromLine] = distance2curve2(waypoints,x2, y2)
 x = [x2,y2]; %some point
 i=[];
 s=size(waypoints);
-
+d=zeros(6,1);
 for i=1:1:s(1,1)-1;
     a = [waypoints(i,1),waypoints(i,2)]; %segment points a,b
     b = [waypoints(i+1,1),waypoints(i+1,2)];

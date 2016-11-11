@@ -9,11 +9,11 @@ profile on
 %h = figure;
 
 %% Initializing routing algorithm
-[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed,voyageStartTime] = init();
+[search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed] = init();
 
 %% Starting A* algorithm
 fprintf('Starting A* algorithm...')
-[pathMatrix, pathArray, drawResults] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime);
+[pathMatrix, pathArray, drawResults,timeCoordinateSpeedMatrix] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime);
 
 %update figure
 % drawnow;

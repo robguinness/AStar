@@ -1,10 +1,15 @@
 
 % Function to find path, gets start and finish coordinates
-function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
+function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
     addpath algorithm/subroutines
     addpath algorithm/classes
-    
-    
+    secondsPerDay = 86400;
+    speedMatrixStartingTime=readtable('voyageStartTime');
+    speedMatrixStartingTime=table2array(speedMatrixStartingTime);
+    speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
+    speedMatrixUpdateInterval=6; % this needs to be made automatic
+    timeCoordinateSpeedMatrix=0;
+    S=size(inverseSpeed,3);
     updateInterval = 10;
     
     if drawUpdates
@@ -16,7 +21,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
     iceBreakerDistThreshold = 1.5;
     
     speed = 1 ./ inverseSpeed;
-    maxSpeed = max(max(speed));
+    maxSpeed = max(speed(:));
     
     minFcost = 10*sqrt((search.originX - search.destinationX)^2 + (search.originY - search.destinationY)^2) / maxSpeed;
     
@@ -134,17 +139,23 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             if (whichList(neighbor.x,neighbor.y) ~= onOpenList)
 
                                 % Calculate current time; GCost is given in
-                                % seconds, duration is given in hours, both
-                                % need to be made into the same time frame
+                                % seconds, duration, that is used later, is given in hours, both need to be made into the same time frame
                                 % hours:minutes:seconds
-                                currentTime = voyageStartTime + Gcost(currentNode.x,currentNode.y)/.86400; %duration is expressed in hours, thus GCost needs to be expressed as fraction of hours not seconds
+                                currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y)/secondsPerDay; %currentTime is expressed in hh:mm:ss, thus GCost needs to be expressed as fraction of hours not seconds
 
-                                % Calculate time coordinate for
-                                % inverseSpeed Matrix
-                                %timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                % Calculate time coordinate for inverseSpeed Matrix
+                                timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                
+                                if  timeCoordinateSpeedMatrix>=S
+                                    timeCoordinateSpeedMatrix=S;
+                                end
+                                
+                                % Speed matrix is selected for the actual time coordinate
+                                inverseMatrixDynamic=inverseSpeed;
+                                inverseSpeedDynamic = inverseMatrixDynamic(:,:,timeCoordinateSpeedMatrix);
                                 
                                 % Calculate its G cost
-                                addedGCost = calculateGCost5(currentNode.x, currentNode.y,neighbor.x,neighbor.y,latitude, longitude,inverseSpeed, waypoints, maxSpeed,iceBreakerDistThreshold);
+                                addedGCost = calculateGCost5(currentNode.x, currentNode.y,neighbor.x,neighbor.y,latitude, longitude,inverseSpeedDynamic, waypoints, maxSpeed,iceBreakerDistThreshold);
                                                 
                                 % Update Gcost map
                                 Gcost(neighbor.x,neighbor.y) = Gcost(currentNode.x,currentNode.y) + addedGCost;
@@ -174,7 +185,7 @@ function [pathMatrix, pathArray, Gcost] = AStar(search, latitude, longitude, inv
                             else % i.e. whichList(neighbor.x,neighbor.y) == onOpenList
                                 
                                 % Calculate its G cost
-                                addedGCost = calculateGCost5(currentNode.x, currentNode.y, neighbor.x, neighbor.y, latitude, longitude, inverseSpeed, waypoints, maxSpeed, iceBreakerDistThreshold);
+                                addedGCost = calculateGCost5(currentNode.x, currentNode.y, neighbor.x, neighbor.y, latitude, longitude, inverseSpeedDynamic, waypoints, maxSpeed, iceBreakerDistThreshold);
                                 tempGcost = Gcost(currentNode.x,currentNode.y) + addedGCost;
 
                                 % If this path is shorter, change Gcost, Fcost and the parent cell

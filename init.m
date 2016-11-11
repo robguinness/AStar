@@ -147,7 +147,7 @@ useSaved = false;
 %% Define search parameters and IB waypoints
 voyageStartTime=readtable('voyageStartTime');
 voyageStartTime=table2array(voyageStartTime);
-voyageStartTime=duration(voyageStartTime(1,1),voyageStartTime(1,2),voyageStartTime(1,3)); %duration create duration array from numeric values
+voyageStartTime=duration(voyageStartTime(1,1),voyageStartTime(1,2),voyageStartTime(1,3)); %duration creates duration array from numeric values
 % Define arrival, departure positions and the threshold for the probability for a ship being stuck from external .txt file
 departureInput=readtable('INdepartureCoordinates');
 search.originLat = table2array(departureInput(1,1));       % Lat coordinate
@@ -197,10 +197,16 @@ fprintf('done.\n')
 
 fprintf('Loading depth and speed data...')
 load environment/masksFull10                                          % This loads a "depth mask" for the whole Baltic sea
-load environment/speedAalto                                           % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
-                                                                      % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
+% speedAalto is a 2D array, calculated for one time instant. 
+% speedAalto2 is a 3D array calculated for a range of time instances
+
+% load environment/speedAalto                                         % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
+load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 speed=flipud(speed);
 stuck=flipud(stuck);
+% the 3rd dimension of speed matrix is obtained, to know how many time intervals is has
+numberOfIntervals=size(speed);
+numberOfIntervals=numberOfIntervals(3);
 
 fprintf('done.\n')
 
@@ -223,29 +229,30 @@ continentMask = continentMask(minY:maxY,minX:maxX);
 % The X,Y coordinates of HELMI grid are hard-coded here (810:1921,2724:4383)
 % The aim is to have speed matrix oriented so, that its originates in SW corner
 % of a map, and its rows correspond to Longitude and column to Latitude
-
+speed2=ones(556,830,numberOfIntervals);
 speed2=repelem(speed,2,2);
-S=sparse(2400,4800);
+S=ones(2400,4800,numberOfIntervals);
 sizeS=size(S);
-S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=speed2;
+S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7,:)=speed2;
 %S(810:1921,2724:4383)=speed2;
 speed=S;
-speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
-speed=fliplr(speed');
-speed=full(speed);
+speed = speed((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX,:);
+speed=fliplr(permute(speed,[2,1,3]));
+%speed=full(speed);
 inverseSpeed = 1 ./speed;
 clear S;
 
 % Here the matrix determining the probability of ship getting best in ice is
 % introduced, based on AALTO's model
-
+stuck2=ones(556,830,numberOfIntervals);
 stuck2=repelem(stuck,2,2);
-S=sparse(2400,4800);
+S=ones(2400,4800,numberOfIntervals);
 sizeS=size(S);
-S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7)=stuck2;
+S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HELMI.destinationX+7,:)=stuck2;
 stuck=S;
-stuck = stuck((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX);
-stuck=fliplr(stuck');
+stuck = stuck((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX,:);
+%stuck=fliplr(stuck');
+stuck=fliplr(permute(speed,[2,1,3]));
 
 % Combining the speed of a ship with the probability of getting beset in
 % ice, if the probability exceeds certian threshold, the attainable speeds

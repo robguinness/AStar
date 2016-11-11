@@ -5,7 +5,7 @@
 % Distance is given in meters, however the original output of DISTANC function is in degrees.
 % GCost is time elapsed from a starting point to a given point and is
 % expressed in seconds
-function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverseSpeed, waypoints, maxSpeed,distThreshold)
+function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverseSpeedDynamic, waypoints, maxSpeed,distThreshold)
     lat1 = latitude(1,y1);
     long1 = longitude(x1,1);
     lat2 = latitude(1,y2);
@@ -14,7 +14,8 @@ function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverse
     numberOfIntervals=10;
     
     % parameterize line from (x1,y1) to (x2,y2) by c(t)
-    t = linspace(0,1);
+    %t = linspace(0,1);
+    t=[0:1/numberOfIntervals:1];
     cx_t = (x2-x1)*t+x1-0.5;   %from center of cell, NOT upper-right corner!
     cy_t = (y2-y1)*t+y1-0.5;   %from center of cell, NOT upper-right corner!
     
@@ -25,11 +26,11 @@ function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverse
     if (distanceFromLine < distThreshold)
         gCost = dist / maxSpeed; %distance in [m], speed in [m/s]
     else
-        inverseSpeedInterp = interp2(inverseSpeed,cy_t,cx_t);
+        inverseSpeedInterp = interp2(inverseSpeedDynamic,cy_t,cx_t);
 
         % i don't know why, but sometimes inverseSpeedInterp(100) is NaN
         if isnan(inverseSpeedInterp(numberOfIntervals))
-           inverseSpeedInterp(numberOfIntervals) = inverseSpeed(x2,y2); 
+           inverseSpeedInterp(numberOfIntervals) = inverseSpeedDynamic(x2,y2); 
         end
 
         gCost = dt * sum(inverseSpeedInterp);
