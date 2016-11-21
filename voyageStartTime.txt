@@ -1,2 +1,0 @@
-UTC Hours,Minutes,Seconds
-4,00,00

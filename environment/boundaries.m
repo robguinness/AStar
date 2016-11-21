@@ -1,6 +1,9 @@
+function [depthMask] = depth(D)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
 load depth
 depth = depth(1403:1500,3275:3450);
-maskValue = -10;
+maskValue = -D;
 [numRows, numCols] = size(depth);
 depthMask = true(numRows, numCols);
 for i = 1:numCols
@@ -16,3 +19,5 @@ for k = 1:numberOfObjects
 end
 
 save(['depthMaskArch' num2str(abs(maskValue))],'depthMask');
+
+end

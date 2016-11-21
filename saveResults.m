@@ -1,4 +1,4 @@
-function [pC,sAP,tAP] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath)
+function [pC,sAP,tAP,pL] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath,pathLength)
 %saveResults(pathCoordinates,speedAlongPath,timeAlongPath) saves the
 %results obtained in the course of optimization process carried out by
 %AStar algorithm
@@ -19,5 +19,8 @@ writetable(sAP,['results/' t '_OUTspeedAlongPath.txt']);
 
 tAP=array2table(timeAlongPath','VariableNames',{'hours'}); 
 writetable(tAP,['results/' t '_OUTtimeAlongPath.txt']);
+
+pL=array2table(pathLength,'VariableNames',{'Nautical_miles'}); 
+writetable(pL,['results/' t '_OUTpathLenth.txt']);
 
 end

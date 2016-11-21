@@ -1,10 +1,9 @@
-
 % Function to find path, gets start and finish coordinates
 function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
     addpath algorithm/subroutines
     addpath algorithm/classes
     secondsPerDay = 86400;
-    speedMatrixStartingTime=readtable('voyageStartTime');
+    speedMatrixStartingTime=readtable('INvoyageStartTime');
     speedMatrixStartingTime=table2array(speedMatrixStartingTime);
     speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
     speedMatrixUpdateInterval=6; % this needs to be made automatic

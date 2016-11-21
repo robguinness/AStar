@@ -1,4 +1,4 @@
-function [pathCoordinates,speedAlongPath,timeAlongPath] = processResults(speed,drawResults,longitude,latitude,pathArray)
+function [pathCoordinates,speedAlongPath,timeAlongPath,pathLength] = processResults(speed,drawResults,longitude,latitude,pathArray)
 %processResults(speed,drawResults,longitude,latitude,pathArray) processes
 %the results obtained in the course of optimization process carried out by
 %AStar algorithm

@@ -15,6 +15,7 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 %   v0.5      14.10.2016                              drawing options
 %                                                     cleared, code made into blocks
 %   v0.6      18.10.2016                              GCost calculated based on geodetic distance
+%   v0.7      16.11.2016                              Calculations account for the temporal variability of speed
 
 % DEFINITIONS: (change definitions only with great caution!
 % 
@@ -141,11 +142,10 @@ end
 %drawUpdates = false; %updating figure while the algorithm is running
 %drawResults = true; %drawing the reduced path obtained form A*
 
-
 useSaved = false;
 
 %% Define search parameters and IB waypoints
-voyageStartTime=readtable('voyageStartTime');
+voyageStartTime=readtable('INvoyageStartTime');
 voyageStartTime=table2array(voyageStartTime);
 voyageStartTime=duration(voyageStartTime(1,1),voyageStartTime(1,2),voyageStartTime(1,3)); %duration creates duration array from numeric values
 % Define arrival, departure positions and the threshold for the probability for a ship being stuck from external .txt file
@@ -194,9 +194,13 @@ MARGIN=200;
 fprintf('done.\n')
 
 %% Load saved data
-
 fprintf('Loading depth and speed data...')
-load environment/masksFull10                                          % This loads a "depth mask" for the whole Baltic sea
+
+% This function creates two masks one for depth the other for continent.
+% Inputs are GEBCO elevation data and safe depth of water for a given ship
+% defined by the user
+[depthMask,continentMask] = depthMaskEvaluation();
+
 % speedAalto is a 2D array, calculated for one time instant. 
 % speedAalto2 is a 3D array calculated for a range of time instances
 
@@ -221,9 +225,11 @@ fprintf('done.\n')
 
 fprintf('Resizing matrices...')
 sizeDepthMask=size(depthMask);
+sizeContinentMask=size(continentMask);
 depthMask = depthMask((sizeDepthMask(1,1)-maxY):(sizeDepthMask(1,1)-minY),minX:maxX);
 [mapRows, mapCols] = size(depthMask);
-continentMask = continentMask(minY:maxY,minX:maxX);
+continentMask = continentMask((sizeContinentMask(1,1)-maxY):(sizeContinentMask(1,1)-minY),minX:maxX);
+%continentMask = continentMask(minY:maxY,minX:maxX);
 
 % Here a HELMI grid-based speed matrix is embeded into GEBCO-based grid
 % The X,Y coordinates of HELMI grid are hard-coded here (810:1921,2724:4383)
@@ -276,6 +282,7 @@ fprintf('done.\n')
 %% Create whichList array
 whichList = sparse(mapCols, mapRows);
 
+
 %% Historical ship data
 
 % fprintf('Loading ship tracks...')
@@ -307,17 +314,16 @@ whichList = sparse(mapCols, mapRows);
 fprintf('Assigning unnavigable nodes in whichList...')
 % Get "unnavigable" indices from depthMask
 indexObstacles = find(fliplr(depthMask')==1);
-
 % Assign these as unnavigable in whichList
 whichList(indexObstacles) = UNAVIGABLE;
 fprintf('done.\n')
 
 %% Set up continent data
 % Get "continent" indices from paths
-indexContinents = find(continentMask'==1);
-
+indexContinents = find(fliplr(continentMask')==1);
 % Assign these as unnavigable in whichList
 whichList(indexContinents) = CONTINENT;
+
 %% Calculate ice breaker waypoints in [X, Y]
 numWaypoints = size(waypointsLatLong,1);
 waypoints = zeros(numWaypoints,2);
