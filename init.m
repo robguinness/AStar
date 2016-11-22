@@ -324,6 +324,12 @@ indexContinents = find(fliplr(continentMask')==1);
 % Assign these as unnavigable in whichList
 whichList(indexContinents) = CONTINENT;
 
+%% Check if the origin and destination are within navigable area
+if  whichList(search.originX,search.originY)>=4 || whichList(search.destinationX,search.destinationY)>=4
+    fprintf(2,'Point of departure/arrival unnavigable.\n')
+    return
+end
+
 %% Calculate ice breaker waypoints in [X, Y]
 numWaypoints = size(waypointsLatLong,1);
 waypoints = zeros(numWaypoints,2);

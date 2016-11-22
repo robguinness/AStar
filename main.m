@@ -8,7 +8,6 @@ if prof==1
     profiler on
     profile on
 end
-
     
 %% Create figure
 %h = figure;
