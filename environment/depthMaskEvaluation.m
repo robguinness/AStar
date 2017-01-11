@@ -9,7 +9,7 @@ function [depthMask,continentMask] = depthMaskEvaluation(D,depth)
 %   depthMask
 %   continentMask
 
-load depth
+load environment/depth
 D=readtable('INsafeDepth.txt');
 D=table2array(D);
 maskValue = -D;

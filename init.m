@@ -1,6 +1,5 @@
 function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed] = init()
-%UNTITLED8 Summary of this function goes here
-%   Detailed explanation goes here
+%INIT This function initializes the routing algorithm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This script initializes the necesary data structures and run-time
@@ -16,6 +15,7 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 %                                                     cleared, code made into blocks
 %   v0.6      18.10.2016                              GCost calculated based on geodetic distance
 %   v0.7      16.11.2016                              Calculations account for the temporal variability of speed
+%   v0.8      11.01.2017                              Meta-model for speed and the probability of getting stuck is implemented
 
 % DEFINITIONS: (change definitions only with great caution!
 % 
@@ -96,6 +96,18 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 %                   LONG of point of origin and point of desitnation.
 
 % speedAalto        matrix contains speed and stuck files, both of size 556x830
+% 
+% metaSpeed         it contians thee arrays: v_m, bst, ram.
+%                   v_m - the mean speeds, in [m/s]; 
+%                   bst is array of 1 or 0, 1 when ship is beset in ice. For those cases v_m has entry of 0; 
+%                   ram is array of integers, the number of rams for the case.
+%                   15 minute simulations with the use of ship transit model presented in 
+%                   Kuuliala L., Kujala P., Suominen M., Montewka J., Estimating operability of ships in ridged ice fields, Cold Regions Science and Technology, 135, 2017, 51-61.
+%                   All arrays are indexed (i,j,k), where i is heq, j is hi and k is 200 cases of one instance of hi-heq combination.
+%                   8 columns corresponding to hi = 0.1:0.1:0.8; level ice
+%                   thicknesses in [m]
+%                   12 rows corresponding to heq = 0.05:0.05:0.6;
+%                   equivalent ice thicknesses in [m]
 
 disp('Initializing the program...')
 
@@ -205,7 +217,26 @@ fprintf('Loading depth and speed data...')
 % speedAalto2 is a 3D array calculated for a range of time instances
 
 % load environment/speedAalto                                         % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
-load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
+%load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
+load environment/iceThicknessRand.mat
+% this is array containing ice thickness information, for level ice (hi)
+% and equivalnet ice thickness (heq) in [m]
+load environment/metaSpeed.mat
+% this array contains v_m, bst and ram
+
+% This calculates speed based on hi, heq with the use of
+% interpolationMetaSpeed.m function
+
+heq_ind=heq./0.05;  % this transaltes ice thickness into index that is taken as an input for interpolation function mentioned above.
+hi_ind=hi./0.1;     % the same as above. Both indices are taken to obtain the speed value and probability of getting stuck.
+
+[speed]=interpolationMetaSpeed(hi_ind,heq_ind);
+speed(find(speed<0.001)) = 0.01;
+
+[stuck]=interpolationMetaStuck(hi_ind,heq_ind);
+stuck(find(stuck<0)) = 0;
+stuck(find(stuck>1)) = 1;
+
 speed=flipud(speed);
 stuck=flipud(stuck);
 % the 3rd dimension of speed matrix is obtained, to know how many time intervals is has

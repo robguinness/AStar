@@ -144,7 +144,7 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
 
                                 % Calculate time coordinate for inverseSpeed Matrix
                                 timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
-                                
+                                timeCoordinateSpeedMatrix2(i) = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
                                 if  timeCoordinateSpeedMatrix>=S
                                     timeCoordinateSpeedMatrix=S;
                                 end

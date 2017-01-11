@@ -38,6 +38,7 @@ waypointsLatLong = readtable('INwaypointsIB');
 waypointsLatLong=table2array(waypointsLatLong);
 kmlwrite('results/IBWPs.kml',waypointsLatLong(:,1),waypointsLatLong(:,2));
 
+%% Profiler results
 if prof==1
     profile viewer
 end
