@@ -1,13 +1,13 @@
 		Lat	Long
-Tallinn		59.52	24.7
-Helsinki	60.1	24.95
-Hanko		59.73	23
-Kotka		60.4	26.9
-Baltic		58	20.5
-Riga		57.1	23.9
-Turku		60.4	22.1
-Vaasa		63.283	20.608
-Kokkola		63.983	22.866
-Oulu		65	25.12
-Kemi		65.7	25.55
-Luleå		65.5	22.4
+Tallinn		59.52,	24.7
+Helsinki	60.1,	24.95
+Hanko		59.73,	23
+Kotka		60.4,	26.9
+Baltic		58,	20.5
+Riga		57.1,	23.9
+Turku		60.4,	22.1
+Vaasa		63.283,	20.608
+Kokkola		63.983,	22.866
+Oulu		65,	25.12
+Kemi		65.7,	25.55
+Luleå		65.5,	22.4

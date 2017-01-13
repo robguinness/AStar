@@ -1,4 +1,4 @@
-function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed] = init()
+function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed, stuck] = init()
 %INIT This function initializes the routing algorithm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,9 +66,10 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 %                (there are n longitudes in search area) that crosses all latitudes (m), represented by columns. Rows can be
 %                seen as meridians and coluns as parallels.    
 %
-% speed          n by m matrix where the elements in the matrix represent speed for a particular ship, based on ship performance model developed by AALTO. 
-%                Rows in the matrix represent longitude (x-coordinates) and columns represent latitude (y-coordiantes).
+% speed          m by n matrix where the elements in the matrix represent speed for a particular ship, based on ship performance model developed by AALTO. 
+%                Rows in the matrix represent latitude (y-coordinates) and columns represent longitude (x-coordiantes).
 %                Element (1,1) is the Southwest corner of the area - N.B. the difference in orientation between speed and depthMask matrices.
+%                The number of rows is 556 and the number of columns is 830.
 %
 %                --------------------------------------------
 %                  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | n|
@@ -122,7 +123,6 @@ addpath environment environment/penninsulas
 addpath ships
 addpath utilities
 addpath algorithm
-addpath geographiclib_toolbox
 
 %% Define data structures
 
@@ -218,24 +218,35 @@ fprintf('Loading depth and speed data...')
 
 % load environment/speedAalto                                         % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
 %load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
-load environment/iceThicknessRand.mat
-% this is array containing ice thickness information, for level ice (hi)
-% and equivalnet ice thickness (heq) in [m]
+load environment/iceThickness.mat
+% this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 load environment/metaSpeed.mat
 % this array contains v_m, bst and ram
 
-% This calculates speed based on hi, heq with the use of
-% interpolationMetaSpeed.m function
+% This calculates speed based on hi, heq with the use of interpolationMetaSpeed.m function
 
-heq_ind=heq./0.05;  % this transaltes ice thickness into index that is taken as an input for interpolation function mentioned above.
-hi_ind=hi./0.1;     % the same as above. Both indices are taken to obtain the speed value and probability of getting stuck.
+% --------------------------------------------
+% This section can be commented out if values stored in speedAalto2.m are to be used for speed
+% maxIceThickness is based on the results of transit simulation, which define max ice parameters for which a ship can?t proceed, thus speed is 0.
+% Tis variues from ship to ship thus need to be updated when a data for a new ship arrives
+maxIceThickness=readtable('INmaxIceThickness');
+maxLevelIceThickness=table2array(maxIceThickness(1,1));
+maxEquivalentIceThickness=table2array(maxIceThickness(1,2));
 
-[speed]=interpolationMetaSpeed(hi_ind,heq_ind);
-speed(find(speed<0.001)) = 0.01;
+heq(find(heq>maxEquivalentIceThickness))=maxEquivalentIceThickness;
+hi(find(hi>maxLevelIceThickness))=maxLevelIceThickness;
 
-[stuck]=interpolationMetaStuck(hi_ind,heq_ind);
-stuck(find(stuck<0)) = 0;
+heq_ind=heq./0.05;  
+% this transaltes ice thickness into index that is taken as an input for interpolation function mentioned above.
+hi_ind=hi./0.1;     
+% the same as above. Both indices are taken to obtain the speed value and probability of getting stuck.
+
+[speed]=interpolationMetaSpeed(hi_ind,heq_ind); % the speed array is created based on hi and heq and speed-meta model
+speed(find(speed<0.001)) = 0.01; % this is made to avoid negative speeds that may occur as a result of interpolation
+[stuck]=interpolationMetaStuck(hi_ind,heq_ind); % the probability of getting stuck array is created based on hi and heq and speed meta-model
+stuck(find(stuck<0)) = 0; % to avoid P(stuck) greater than 1 or smaller than 0, due to interpolation errors
 stuck(find(stuck>1)) = 1;
+% --------------------------------------------
 
 speed=flipud(speed);
 stuck=flipud(stuck);
@@ -244,7 +255,6 @@ numberOfIntervals=size(speed);
 numberOfIntervals=numberOfIntervals(3);
 
 fprintf('done.\n')
-
 %% Reducing the size of latitude and longitude matrices according to the already defined limits of the search area (minX-maxX, minY-maxY)
 
 fprintf('Calculating geographic coordinates...')

@@ -28,7 +28,7 @@ fprintf('Starting A* algorithm...')
 [pC,sAP,tAP,pL] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath,pathLength);
 datetime('now','InputFormat','YY-MM-DD-HH-MM-SS');
 
-timeOverall=toc/60;
+timeToComputeRoute=toc/60;
 t=datestr(now,'mmddyyyy_HHMM');
 save(['results/' t '_timeOverall.txt'], 'timeOverall', '-ascii');
 

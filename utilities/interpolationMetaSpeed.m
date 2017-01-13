@@ -10,10 +10,16 @@ function [metaSpeed] = interpolationMetaSpeed(x,y)
 % heq = 0.05:0.05:0.6; equivalent ice thicknesses
 
 load environment/metaSpeed.mat
+v_m(find(v_m==0))=NaN;
 M = size(v_m,1);
 N = size(v_m,2);
-Speed = mean(v_m,3);
-interpolatedSpeed = @(x,y) interp2(1:N,1:M,Speed,x,y,'spline',0.2);
+% Zero speed are removed, since they correspond to cases, where ship got
+% stuck. However we are not intertested in that. Instead we want to know what is the expected speed for a ship in a given ice conditions.
+% Therefore the zero speed speed are excluded, not to obstruct the view.
+% Instead the P(Stuck) is introduced.
+
+Speed= mode(v_m,3);
+interpolatedSpeed = @(x,y) interp2(1:N,1:M,Speed,x,y,'spline',max(Speed(:)));
 %interpolatedB = @(x,y) griddata(1:N,1:M,A,x,y); % alternative
 metaSpeed=interpolatedSpeed(x,y);
 

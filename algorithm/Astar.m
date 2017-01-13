@@ -3,8 +3,9 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
     addpath algorithm/subroutines
     addpath algorithm/classes
     secondsPerDay = 86400;
-    speedMatrixStartingTime=readtable('INvoyageStartTime');
-    speedMatrixStartingTime=table2array(speedMatrixStartingTime);
+    speedMatrixStartingTime=table2array(readtable('INvoyageStartTime'));
+    %speedMatrixStartingTime=table2array(speedMatrixStartingTime);
+    %speedMatrixStartingTime=datetime(speedMatrixStartingTime);
     speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
     speedMatrixUpdateInterval=6; % this needs to be made automatic
     timeCoordinateSpeedMatrix=0;

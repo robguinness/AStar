@@ -15,8 +15,10 @@ N = size(v_m,2);
 %Speed = mean(v_m,3);
 Stuck = mean(bst,3);
 %interpolatedSpeed = @(x,y) interp2(1:N,1:M,Speed,x,y,'cubic',0.1);
-interpolatedStuck = @(x,y) interp2(1:N,1:M,Stuck,x,y,'spline',1);
-
+interpolatedStuck = @(x,y) interp2(1:N,1:M,Stuck,x,y,'spline',0);
+% extrapolval needs to be carefully defined. This gives a value of the
+% probability of getting stuck, once the ice conditions falls beyond the
+% conditions anticipated in the bst array
 %interpolatedB = @(x,y) griddata(1:N,1:M,A,x,y); % alternative
 %metaSpeed=interpolatedSpeed(x,y);
 metaStuck=interpolatedStuck(x,y);

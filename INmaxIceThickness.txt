@@ -1,0 +1,2 @@
+Maximum_level_ice_thickness,	Maximum_equivalent_ice_thickness
+0.8,				0.6	
