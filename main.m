@@ -17,12 +17,12 @@ end
 
 %% Starting A* algorithm
 fprintf('Starting A* algorithm...')
-[pathMatrix, pathArray, drawResults,timeCoordinateSpeedMatrix] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime);
+[pathMatrix, pathAndSpeedArray, drawResults,timeCoordinateSpeedMatrix] = Astar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime);
 
 %update figure
 % drawnow;
 %% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path
-[pathCoordinates,speedAlongPath,timeAlongPath,pathLength] = processResults(speed,drawResults,longitude,latitude,pathArray);
+[pathCoordinates,speedAlongPath,timeAlongPath,pathLength] = processResults(speed,drawResults,longitude,latitude,pathAndSpeedArray);
 
 %% Saving relevant information as text files,calculating overall computation time and clearing the workspace
 [pC,sAP,tAP,pL] = saveResults(pathCoordinates,speedAlongPath,timeAlongPath,pathLength);
@@ -30,7 +30,7 @@ datetime('now','InputFormat','YY-MM-DD-HH-MM-SS');
 
 timeToComputeRoute=toc/60;
 t=datestr(now,'mmddyyyy_HHMM');
-save(['results/' t '_timeOverall.txt'], 'timeOverall', '-ascii');
+save(['results/' t '_timeToComputeRoute.txt'], 'timeToComputeRoute', '-ascii');
 
 %% Saving relevant information as kml files, for visualization purposes
 kmlwriteline(['results/' t '_path.kml'],pathCoordinates(:,2),pathCoordinates(:,1),speedAlongPath(:,1));

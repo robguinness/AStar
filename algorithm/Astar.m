@@ -1,10 +1,13 @@
 % Function to find path, gets start and finish coordinates
-function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
+function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
     addpath algorithm/subroutines
     addpath algorithm/classes
+%     load environment/iceThickness.mat
+%     levelIceTimes=datetime(levelIceTimes);
+%     ridgedIceTimes=datetime(ridgedIceTimes);
     secondsPerDay = 86400;
     speedMatrixStartingTime=table2array(readtable('INvoyageStartTime'));
-    %speedMatrixStartingTime=table2array(speedMatrixStartingTime);
+    
     %speedMatrixStartingTime=datetime(speedMatrixStartingTime);
     speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
     speedMatrixUpdateInterval=6; % this needs to be made automatic
@@ -16,7 +19,7 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
         cm = colormap;
     end
 
-    pathArray = [];
+    pathAndSpeedArray = [];
     
     iceBreakerDistThreshold = 1.5;
     
@@ -30,7 +33,8 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
 
     parentX = sparse(mapWidth,mapHeight);        % 2D array stores x coord of parent for every cell
     parentY = sparse(mapWidth,mapHeight);        % 2D array stores y coord of parent for every cell
-    
+    indexOfSpeedMatrixAtWaypoint = sparse(mapWidth,mapHeight);
+    indexOfSpeedMatrixAtWaypoint(search.originX, search.originY) = calculateTimeCoordinateInverseSpeedMatrix(speedMatrixStartingTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
     
     Gcost = sparse(mapWidth,mapHeight);          % 2D array stores G cost of each cell
     pathLength = 0;                             % Will store pathlength                
@@ -151,8 +155,7 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
                                 end
                                 
                                 % Speed matrix is selected for the actual time coordinate
-                                inverseMatrixDynamic=inverseSpeed;
-                                inverseSpeedDynamic = inverseMatrixDynamic(:,:,timeCoordinateSpeedMatrix);
+                                inverseSpeedDynamic = inverseSpeed(:,:,timeCoordinateSpeedMatrix);
                                 
                                 % Calculate its G cost
                                 addedGCost = calculateGCost5(currentNode.x, currentNode.y,neighbor.x,neighbor.y,latitude, longitude,inverseSpeedDynamic, waypoints, maxSpeed,iceBreakerDistThreshold);
@@ -169,9 +172,10 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
                                 % Change value of current node in whichList
                                 % to 'onOpenList'
                                 whichList(neighbor.x,neighbor.y) = onOpenList;
-
+                                
                                 parentX(neighbor.x,neighbor.y) = currentNode.x;
                                 parentY(neighbor.x,neighbor.y) = currentNode.y;
+                                indexOfSpeedMatrixAtWaypoint(neighbor.x, neighbor.y)=timeCoordinateSpeedMatrix;
 
                                 % Draw current position, shade of
                                 % yellow/orange indicates Fcost
@@ -236,12 +240,13 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
         % Backtrack the path using parents
         pathX = search.destinationX;
         pathY = search.destinationY;
+        speedAtDestination = 1/inverseSpeed(search.destinationX, search.destinationY, indexOfSpeedMatrixAtWaypoint(search.destinationX,search.destinationY));
         % Print out backtracking
         fprintf('%d. Backtracing to find the shortest route \n', i);
         i = i + 1;
         
         % Pre-allocate pathArray to reasonable maximum size
-        pathArray = zeros(mapWidth*mapHeight,2);
+        pathAndSpeedArray = zeros(mapWidth*mapHeight,3);
         
         % Loop until starting position is reached
         while(1)
@@ -255,8 +260,9 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
             
             pathMatrix(pathY,pathX) = 1;
             
-            pathArray(pathLength,1) = pathX;
-            pathArray(pathLength,2) = pathY;
+            pathAndSpeedArray(pathLength,1) = pathX;
+            pathAndSpeedArray(pathLength,2) = pathY;
+            pathAndSpeedArray(pathLength,3) = 1/inverseSpeed(pathX,pathY, indexOfSpeedMatrixAtWaypoint(pathX,pathY));
 
             % Draw return path in magenta
             if (drawUpdates && ~((pathX == search.originX) && (pathY == search.originY) || (pathX == search.destinationX) && (pathY == search.destinationY)) )
@@ -275,11 +281,11 @@ function [pathMatrix, pathArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search
         
     end
     
-    pathArray = [search.destinationX search.destinationY; pathArray(1:pathLength,:)]; 
+    pathAndSpeedArray = [search.destinationX search.destinationY speedAtDestination; pathAndSpeedArray(1:pathLength,:)]; 
     
     
     if (smoothingOn)
-       performSmoothing(whichList, pathArray); 
+       performSmoothing(whichList, pathAndSpeedArray); 
     end
 
    %pathMatrix = flipud(pathMatrix);
