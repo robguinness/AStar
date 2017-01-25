@@ -6,14 +6,34 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
 %     levelIceTimes=datetime(levelIceTimes);
 %     ridgedIceTimes=datetime(ridgedIceTimes);
     secondsPerDay = 86400;
-    speedMatrixStartingTime=table2array(readtable('INvoyageStartTime'));
-    
-    %speedMatrixStartingTime=datetime(speedMatrixStartingTime);
-    speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
-    speedMatrixUpdateInterval=6; % this needs to be made automatic
+    secondsPerHour=3600;
+    speedMatrixStartingTime=datetime(table2array(readtable('INvoyageStartTime2')));
+    speedMatrixStartingTime=datenum(speedMatrixStartingTime);
+    iceForecastInitialTime=datetime(table2array(readtable('INiceForecastInitialTime')));     %iceForecastInitialTime is the time at which the ice foreacst was issued, which is valid for certain time. 
+                                                                                               % Each slice of ice conditions are valid for specific time period, which is defined by the variable speedMatrixUpdateInterval.
+    iceForecastInitialTime=datenum(iceForecastInitialTime);                                 % datenum converts date and time into a number of days elapsed from 1 of January 0000
+    speedMatrixUpdateInterval=6;    % paramter expressed in hours, descirbing the duration between two ice forecasts. This needs to be made automatic
     timeCoordinateSpeedMatrix=0;
-    S=size(inverseSpeed,3);
-    updateInterval = 10;
+    S=size(inverseSpeed,3);         % temporal dimension of the speed matrix
+    updateInterval = 10;            % used for drawing
+    
+    timeDifferenceVoyageForecast=(speedMatrixStartingTime-iceForecastInitialTime)*24;
+    % timeDifferenceVoyageForecast expressed in hours
+    
+    % if voyage commences before the ice forcast becomes valid (before the
+    % date and time of the first slice of the ice forecast),then for the
+    % further computation the first slice of the speed matrix should be
+    % taken (t=1), otherwise the most recent one.
+    if timeDifferenceVoyageForecast<0
+        startTimeSliceOfSpeedMatrix=1;
+    else
+        startTimeSliceOfSpeedMatrix=ceil(timeDifferenceVoyageForecast/speedMatrixUpdateInterval);
+    end
+    
+       
+    %speedMatrixStartingTime=datetime(speedMatrixStartingTime);
+    %speedMatrixStartingTime=duration(speedMatrixStartingTime(1,1),speedMatrixStartingTime(1,2),speedMatrixStartingTime(1,3));
+    
     
     if drawUpdates
         cm = colormap;
@@ -145,11 +165,17 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
                                 % Calculate current time; GCost is given in
                                 % seconds, duration, that is used later, is given in hours, both need to be made into the same time frame
                                 % hours:minutes:seconds
-                                currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y)/secondsPerDay; %currentTime is expressed in hh:mm:ss, thus GCost needs to be expressed as fraction of hours not seconds
-
+                                %currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y)/secondsPerDay; 
+                                %currentTime is expressed in hh:mm:ss, thus GCost needs to be expressed as fraction of hours not seconds
+                                startTimeSliceOfSpeedMatrix=ceil(timeDifferenceVoyageForecast/speedMatrixUpdateInterval);
+                                currentTimeSliceOfSpeedMatrix = startTimeSliceOfSpeedMatrix + round((Gcost(currentNode.x,currentNode.y)/secondsPerHour)/speedMatrixUpdateInterval);
+                                %currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y);
+                                % here currentTime is expressed in seconds
+                                
                                 % Calculate time coordinate for inverseSpeed Matrix
-                                timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
-                                timeCoordinateSpeedMatrix2(i) = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                timeCoordinateSpeedMatrix = currentTimeSliceOfSpeedMatrix;
+                                %timeCoordinateSpeedMatrix = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
+                                %timeCoordinateSpeedMatrix2(i) = calculateTimeCoordinateInverseSpeedMatrix(currentTime, speedMatrixStartingTime, speedMatrixUpdateInterval);
                                 if  timeCoordinateSpeedMatrix>=S
                                     timeCoordinateSpeedMatrix=S;
                                 end

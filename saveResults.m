@@ -21,6 +21,6 @@ tAP=array2table(timeAlongPath','VariableNames',{'hours'});
 writetable(tAP,['results/' t '_OUTtimeAlongPath.txt']);
 
 pL=array2table(pathLength,'VariableNames',{'Nautical_miles'}); 
-writetable(pL,['results/' t '_OUTpathLenth.txt']);
+writetable(pL,['results/' t '_OUTpathLength.txt']);
 
 end

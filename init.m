@@ -1,4 +1,4 @@
-function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed, stuck] = init()
+function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed, stuck] = init(env_path, in_path, out_path)
 %INIT This function initializes the routing algorithm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,7 +98,7 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 
 % speedAalto        matrix contains speed and stuck files, both of size 556x830
 % 
-% metaSpeed         it contians thee arrays: v_m, bst, ram.
+% metaSpeed         it contains three arrays: v_m, bst, ram.
 %                   v_m - the mean speeds, in [m/s]; 
 %                   bst is array of 1 or 0, 1 when ship is beset in ice. For those cases v_m has entry of 0; 
 %                   ram is array of integers, the number of rams for the case.
@@ -113,7 +113,16 @@ function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawU
 disp('Initializing the program...')
 
 %% Misc. initialization
-tic
+% Lauri's part of the code goes here
+
+% tic
+% if (isdeployed == 0) 
+%     clc
+%     %clear all
+%     close all
+% end
+
+% Lauri's part of the code ends here
 
 %hold on
 startTime = tic;
