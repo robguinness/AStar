@@ -7,7 +7,7 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
 %     ridgedIceTimes=datetime(ridgedIceTimes);
     secondsPerDay = 86400;
     secondsPerHour=3600;
-    speedMatrixStartingTime=datetime(table2array(readtable('INvoyageStartTime2')));
+    speedMatrixStartingTime=datetime(table2array(readtable('INvoyageStartTime')));
     speedMatrixStartingTime=datenum(speedMatrixStartingTime);
     iceForecastInitialTime=datetime(table2array(readtable('INiceForecastInitialTime')));     %iceForecastInitialTime is the time at which the ice foreacst was issued, which is valid for certain time. 
                                                                                                % Each slice of ice conditions are valid for specific time period, which is defined by the variable speedMatrixUpdateInterval.

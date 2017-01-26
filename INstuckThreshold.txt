@@ -1,2 +1,2 @@
 Probability_of_getting_stuck_threshold
-0.5
+0.9

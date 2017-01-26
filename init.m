@@ -310,7 +310,7 @@ S((sizeS(1,1)-HELMI.destinationY):(sizeS(1,1)-HELMI.originY+1),HELMI.originX:HEL
 stuck=S;
 stuck = stuck((sizeS(1,1)-maxY):(sizeS(1,1)-minY),minX:maxX,:);
 %stuck=fliplr(stuck');
-stuck=fliplr(permute(speed,[2,1,3]));
+stuck=fliplr(permute(stuck,[2,1,3]));
 
 % Combining the speed of a ship with the probability of getting beset in
 % ice, if the probability exceeds certian threshold, the attainable speeds
