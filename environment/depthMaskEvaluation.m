@@ -31,6 +31,8 @@ for i = 1:numCols
     continentMask(rows,i)=1;
 end
 
-save(['environment/maskFull' num2str(abs(maskValue))],'depthMask','continentMask');
+%save(['environment/maskFull' num2str(abs(maskValue))],'depthMask','continentMask');
+% This line is removed so the heavy files with bathymetry are not stored
+% for each and every draft of a ship.
 
 end

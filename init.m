@@ -128,7 +128,7 @@ disp('Initializing the program...')
 startTime = tic;
 
 %% Set-up path
-addpath environment environment/penninsulas
+%addpath environment environment/penninsulas
 addpath ships
 addpath utilities
 addpath algorithm
@@ -320,7 +320,7 @@ stuck=fliplr(permute(stuck,[2,1,3]));
 % a first try now.
 indStuck=find(stuck>stuckThreshold);
 speedStuck=speed;
-speedStuck(indStuck)=0.1*speed(indStuck);
+speedStuck(indStuck)=table2array(readtable('INspeedReductionFactorWhenStuck.txt'))*speed(indStuck);
 inverseSpeed = 1 ./speedStuck;
 
 % search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList

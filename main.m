@@ -33,7 +33,7 @@ t=datestr(now,'mmddyyyy_HHMM');
 save(['results/' t '_timeToComputeRoute.txt'], 'timeToComputeRoute', '-ascii');
 
 %% Saving relevant information as kml files, for visualization purposes
-kmlwriteline(['results/' t '_path.kml'],pathCoordinates(:,2),pathCoordinates(:,1),speedAlongPath(:,1));
+kmlwriteline(['results/' t '_path.kml'],pathCoordinates(:,2),pathCoordinates(:,1),speedAlongPath(1,:));
 waypointsLatLong = readtable('INwaypointsIB');
 waypointsLatLong=table2array(waypointsLatLong);
 kmlwrite('results/IBWPs.kml',waypointsLatLong(:,1),waypointsLatLong(:,2));

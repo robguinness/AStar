@@ -11,7 +11,7 @@ function [pC,sAP,tAP,pL] = saveResults(pathCoordinates,speedAlongPath,timeAlongP
 
 t=datestr(now,'mmddyyyy_HHMM');
 
-pC=array2table(pathCoordinates,'VariableNames',{'Long' 'Lat'}); 
+pC=array2table([pathCoordinates,speedAlongPath'],'VariableNames',{'Long' 'Lat' 'Speed'}); 
 writetable(pC,['results/' t '_OUTpathCoordinates.txt']);
 
 sAP=array2table(speedAlongPath','VariableNames',{'knots'}); 

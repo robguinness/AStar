@@ -1,0 +1,2 @@
+Speed_reduction_factor_for_ship_besetted_in_ice
+0.5
