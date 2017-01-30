@@ -128,8 +128,8 @@ disp('Initializing the program...')
 startTime = tic;
 
 %% Set-up path
-%addpath environment environment/penninsulas
-addpath ships
+addpath environment
+%addpath ships
 addpath utilities
 addpath algorithm
 
@@ -230,6 +230,7 @@ fprintf('Loading depth and speed data...')
 load environment/iceThickness.mat
 levelIce=hi;
 ridgedIce=heq;
+
 % this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 load environment/metaSpeed.mat
 % this array contains v_m, bst and ram
