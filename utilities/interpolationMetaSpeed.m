@@ -10,7 +10,7 @@ function [metaSpeed] = interpolationMetaSpeed(x,y)
 % heq = 0.05:0.05:0.6; equivalent ice thicknesses
 
 load environment/metaSpeed.mat
-v_m(find(v_m==0))=NaN;
+v_m(find(v_m==0))=0.1;
 M = size(v_m,1);
 N = size(v_m,2);
 % Zero speed are removed, since they correspond to cases, where ship got
