@@ -18,7 +18,7 @@ N = size(v_m,2);
 % Therefore the zero speed speed are excluded, not to obstruct the view.
 % Instead the P(Stuck) is introduced.
 
-Speed= mode(v_m,3);
+Speed= mean(v_m,3);
 interpolatedSpeed = @(x,y) interp2(1:N,1:M,Speed,x,y,'spline',max(Speed(:)));
 %interpolatedB = @(x,y) griddata(1:N,1:M,A,x,y); % alternative
 metaSpeed=interpolatedSpeed(x,y);
