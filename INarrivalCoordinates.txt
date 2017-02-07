@@ -1,5 +1,2 @@
-<<<<<<< HEAD
-Lat,Long63.983,	22.866
-=======
-Lat,Long64,	22.65
->>>>>>> my-working-copy
+Lat,Long63.5,	20.5
+

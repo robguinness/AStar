@@ -16,7 +16,7 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
     %Each slice of ice conditions are valid for specific time period, which is defined by the variable speedMatrixUpdateInterval.
     iceForecastInitialTime=datenum(iceForecastInitialTime);
     % datenum converts date and time into a number of days elapsed from 1 of January 0000
-    speedMatrixUpdateInterval=size(levelIceTimes,2);
+    speedMatrixUpdateInterval=hours(levelIceTimes(2)-levelIceTimes(1));
     % parameter expressed in hours, descirbing the duration between two ice forecasts.
     timeCoordinateSpeedMatrix=0;
     S=size(inverseSpeed,3);         % temporal dimension of the speed matrix
@@ -33,6 +33,10 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
         startTimeSliceOfSpeedMatrix=1;
     else
         startTimeSliceOfSpeedMatrix=ceil(timeDifferenceVoyageForecast/speedMatrixUpdateInterval);
+        if startTimeSliceOfSpeedMatrix>size(levelIceTimes,2)
+        startTimeSliceOfSpeedMatrix=speedMatrixUpdateInterval;
+        end
+        
     end
     
        
