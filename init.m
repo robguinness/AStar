@@ -222,31 +222,20 @@ fprintf('Loading depth and speed data...')
 % defined by the user
 [depthMask,continentMask] = depthMaskEvaluation();
 
-% speedAalto is a 2D array, calculated for one time instant. 
 % speedAalto2 is a 3D array calculated for a range of time instances
+% This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
+%load environment/speedAalto2                                          
+% It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 
-% load environment/speedAalto                                         % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
-%load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 load environment/iceThickness.mat
-<<<<<<< HEAD
-levelIce=iceConcentration.*levelIce;
-ridgedIce=iceConcentration.*ridgedIce;
-hi=levelIce;
-heq=ridgedIce;
-=======
-
+% this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
+% the thickness needs to be multiplied with the concentration to obtain the
+% meaningful results
 hi=levelIce.*iceConcentration;
 heq=ridgedIce.*iceConcentration;
->>>>>>> my-working-copy
 
-% this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 load environment/metaSpeed.mat
 % this array contains v_m, bst and ram
-
-% This calculates speed based on hi, heq with the use of interpolationMetaSpeed.m function
-
-% --------------------------------------------
-% This section can be commented out if values stored in speedAalto2.m are to be used for speed
 % maxIceThickness is based on the results of transit simulation, which define max ice parameters for which a ship can?t proceed, thus speed is 0.
 % Tis variues from ship to ship thus need to be updated when a data for a new ship arrives
 maxIceThickness=readtable('INmaxIceThickness');
