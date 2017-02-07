@@ -228,10 +228,16 @@ fprintf('Loading depth and speed data...')
 % load environment/speedAalto                                         % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
 %load environment/speedAalto2                                          % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 load environment/iceThickness.mat
+<<<<<<< HEAD
 levelIce=iceConcentration.*levelIce;
 ridgedIce=iceConcentration.*ridgedIce;
 hi=levelIce;
 heq=ridgedIce;
+=======
+
+hi=levelIce.*iceConcentration;
+heq=ridgedIce.*iceConcentration;
+>>>>>>> my-working-copy
 
 % this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 load environment/metaSpeed.mat

@@ -3,6 +3,7 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
     addpath algorithm/subroutines
     addpath algorithm/classes
     addpath environment
+    load environment/iceThickness.mat
 %     load environment/iceThickness.mat
 %     levelIceTimes=datetime(levelIceTimes);
 %     ridgedIceTimes=datetime(ridgedIceTimes);
@@ -10,11 +11,13 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
     secondsPerHour=3600;
     speedMatrixStartingTime=datetime(table2array(readtable('INvoyageStartTime')));
     speedMatrixStartingTime=datenum(speedMatrixStartingTime);
-    iceForecastInitialTime=datetime(table2array(readtable('INiceForecastInitialTime')));     %iceForecastInitialTime is the time at which the ice foreacst was issued, which is valid for certain time. 
-                                                                                               % Each slice of ice conditions are valid for specific time period, which is defined by the variable speedMatrixUpdateInterval.
-    iceForecastInitialTime=datenum(iceForecastInitialTime);                                 % datenum converts date and time into a number of days elapsed from 1 of January 0000
-    load environment/iceThickness.mat
-    speedMatrixUpdateInterval=size(levelIceTimes,2);    % parameter expressed in hours, descirbing the duration between two ice forecasts.
+    iceForecastInitialTime=datestr(levelIceTimes(1));           
+    %iceForecastInitialTime is the time at which the ice foreacst was issued, which is valid for certain time. This is taken directly from the ice information provided by VTT 
+    %Each slice of ice conditions are valid for specific time period, which is defined by the variable speedMatrixUpdateInterval.
+    iceForecastInitialTime=datenum(iceForecastInitialTime);
+    % datenum converts date and time into a number of days elapsed from 1 of January 0000
+    speedMatrixUpdateInterval=size(levelIceTimes,2);
+    % parameter expressed in hours, descirbing the duration between two ice forecasts.
     timeCoordinateSpeedMatrix=0;
     S=size(inverseSpeed,3);         % temporal dimension of the speed matrix
     updateInterval = 10;            % used for drawing
