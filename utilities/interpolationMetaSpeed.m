@@ -1,4 +1,4 @@
-function [metaSpeed] = interpolationMetaSpeed(x,y)
+function [metaSpeed] = interpolationMetaSpeed(x,y,env_path)
 %interpolationMetaSpeed(v_m,x,y) interpolates the speed values from the precalculated speed array from ship transit model.
 % 
 % This array - v_m - of the mean speeds. bst is array of 1 or 0, 1 when ship is beset in ice. For those cases v_m has entry of 0. ram is array of integers, the number of rams for the case.
@@ -9,7 +9,7 @@ function [metaSpeed] = interpolationMetaSpeed(x,y)
 % hi = 0.1:0.1:0.8; level ice thicknesses
 % heq = 0.05:0.05:0.6; equivalent ice thicknesses
 
-load environment/metaSpeed.mat
+load(strcat(env_path, '/metaSpeed.mat'));
 v_m(find(v_m==0))=0.1;
 M = size(v_m,1);
 N = size(v_m,2);

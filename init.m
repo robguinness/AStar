@@ -270,9 +270,9 @@ heq_ind=heq./0.05;
 hi_ind=hi./0.1;     
 % the same as above. Both indices are taken to obtain the speed value and probability of getting stuck.
 
-[speed]=interpolationMetaSpeed(hi_ind,heq_ind); % the speed array is created based on hi and heq and speed-meta model
+[speed]=interpolationMetaSpeed(hi_ind,heq_ind,env_path); % the speed array is created based on hi and heq and speed-meta model
 speed(find(speed<0.001)) = 0.01; % this is made to avoid negative speeds that may occur as a result of interpolation
-[stuck]=interpolationMetaStuck(hi_ind,heq_ind); % the probability of getting stuck array is created based on hi and heq and speed meta-model
+[stuck]=interpolationMetaStuck(hi_ind,heq_ind,env_path); % the probability of getting stuck array is created based on hi and heq and speed meta-model
 stuck(find(stuck<0)) = 0; % to avoid P(stuck) greater than 1 or smaller than 0, due to interpolation errors
 stuck(find(stuck>1)) = 1;
 % --------------------------------------------
