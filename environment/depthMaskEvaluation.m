@@ -1,4 +1,4 @@
-function [depthMask,continentMask] = depthMaskEvaluation(D,depth)
+function [depthMask,continentMask] = depthMaskEvaluation(env_path, in_path)
 %DEPTHMASKEVALUATION determnines two masks one for depth the other for continents. 
 % INPUT
 %   depth - GEBCO 30 arc-second global grid of elevations in meters
@@ -9,8 +9,8 @@ function [depthMask,continentMask] = depthMaskEvaluation(D,depth)
 %   depthMask
 %   continentMask
 
-load environment/depth
-D=readtable('INsafeDepth.txt');
+load(strcat(env_path, '/depth.mat'));
+D=readtable(strcat(in_path,'/INsafeDepth.txt'));
 D=table2array(D);
 maskValue = -D;
 

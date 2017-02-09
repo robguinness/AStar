@@ -1,4 +1,4 @@
-function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed, stuck] = init(env_path, in_path, out_path)
+function [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, speed, stuck, levelIceTimes] = init(env_path, in_path, out_path)
 %INIT This function initializes the routing algorithm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -115,12 +115,26 @@ disp('Initializing the program...')
 %% Misc. initialization
 % Lauri's part of the code goes here
 
-% tic
-% if (isdeployed == 0) 
-%     clc
-%     %clear all
-%     close all
-% end
+if (isdeployed == 1) 
+    % Load data from ViewIce format and save in .mat file when in deployed
+    % mode
+    [ levelIce, levelIceTimes ] = read3Darray(strcat(in_path,'/INlevelIceThickness.txt'), ' ');
+    [ ridgedIce, ridgedIceTimes ] = read3Darray(strcat(in_path,'/INridgedIceThickness.txt'), ' ');
+    [ iceConcentration, iceConcentrationTimes ] = read3Darray(strcat(in_path,'/INiceConcentration.txt'), ' ');
+    if (length(levelIceTimes) >= 2)
+        halfDiff = (levelIceTimes(2)-levelIceTimes(1))/2;
+        levelIceTimes = levelIceTimes - halfDiff;
+    end
+    if (length(ridgedIceTimes) >= 2)
+        halfDiff = (ridgedIceTimes(2)-ridgedIceTimes(1))/2;
+        ridgedIceTimes = ridgedIceTimes - halfDiff;
+    end
+    if (length(iceConcentrationTimes) >= 2)
+        halfDiff = (iceConcentrationTimes(2)-iceConcentrationTimes(1))/2;
+        iceConcentrationTimes = iceConcentrationTimes - halfDiff;
+    end
+    save(strcat(in_path,'/iceData.mat'),'levelIce','levelIceTimes','ridgedIce','ridgedIceTimes','iceConcentration','iceConcentrationTimes');
+end
 
 % Lauri's part of the code ends here
 
@@ -128,10 +142,12 @@ disp('Initializing the program...')
 startTime = tic;
 
 %% Set-up path
-addpath environment
-%addpath ships
-addpath utilities
-addpath algorithm
+if (isdeployed == 0) 
+    addpath environment
+    %addpath ships
+    addpath utilities
+    addpath algorithm
+end
 
 %% Define data structures
 
@@ -166,25 +182,25 @@ end
 useSaved = false;
 
 %% Define search parameters and IB waypoints
-voyageStartTime=readtable('INvoyageStartTime');
+voyageStartTime=readtable(strcat(in_path,'/INvoyageStartTime'));
 voyageStartTime=table2array(voyageStartTime);
 voyageStartTime=duration(voyageStartTime(1,1),voyageStartTime(1,2),voyageStartTime(1,3)); %duration creates duration array from numeric values
 % Define arrival, departure positions and the threshold for the probability for a ship being stuck from external .txt file
-departureInput=readtable('INdepartureCoordinates');
+departureInput=readtable(strcat(in_path,'/INdepartureCoordinates'));
 search.originLat = table2array(departureInput(1,1));       % Lat coordinate
 search.originLong = table2array(departureInput(1,2));      % Long coordinate
 clearvars departureInput
 
-arrivalInput=readtable('INarrivalCoordinates');
+arrivalInput=readtable(strcat(in_path,'/INarrivalCoordinates'));
 search.destinationLat = table2array(arrivalInput(1,1));   % Lat coordinate
 search.destinationLong = table2array(arrivalInput(1,2));  % Long coordinate
 clearvars arrivalInput
 
-stuckInput=readtable('INstuckThreshold');
+stuckInput=readtable(strcat(in_path,'/INstuckThreshold'));
 stuckThreshold=table2array(stuckInput(1,1));
 
 % Define ice breaker waypoints
-waypointsLatLong = readtable('INwaypointsIB');
+waypointsLatLong = readtable(strcat(in_path,'/INwaypointsIB'));
 waypointsLatLong=table2array(waypointsLatLong);
 
 % GEBCO depth matrix definition
@@ -220,25 +236,29 @@ fprintf('Loading depth and speed data...')
 % This function creates two masks one for depth the other for continent.
 % Inputs are GEBCO elevation data and safe depth of water for a given ship
 % defined by the user
-[depthMask,continentMask] = depthMaskEvaluation();
+[depthMask,continentMask] = depthMaskEvaluation(env_path, in_path);
 
 % speedAalto2 is a 3D array calculated for a range of time instances
 % This loads a speed grid for the area covered by HELMI model, calculated at AALTO. 
 %load environment/speedAalto2                                          
 % It originates in SW, and needs to be flipped to conform with the requirements - the origin needs to be in NW.
 
-load environment/iceThickness.mat
+% The data has already been loaded if in deployed mode
+if (isdeployed == 0) 
+    load(strcat(env_path, '/iceThickness.mat'));
+end
+
 % this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 % the thickness needs to be multiplied with the concentration to obtain the
 % meaningful results
 hi=levelIce.*iceConcentration;
 heq=ridgedIce.*iceConcentration;
 
-load environment/metaSpeed.mat
+load(strcat(env_path, '/metaSpeed.mat'));
 % this array contains v_m, bst and ram
 % maxIceThickness is based on the results of transit simulation, which define max ice parameters for which a ship can?t proceed, thus speed is 0.
 % Tis variues from ship to ship thus need to be updated when a data for a new ship arrives
-maxIceThickness=readtable('INmaxIceThickness');
+maxIceThickness=readtable(strcat(in_path,'/INmaxIceThickness'));
 maxLevelIceThickness=table2array(maxIceThickness(1,1));
 maxEquivalentIceThickness=table2array(maxIceThickness(1,2));
 
@@ -318,7 +338,7 @@ stuck=fliplr(permute(stuck,[2,1,3]));
 % a first try now.
 indStuck=find(stuck>stuckThreshold);
 speedStuck=speed;
-speedStuck(indStuck)=table2array(readtable('speedReductionFactorWhenStuck.txt'))*speed(indStuck);
+speedStuck(indStuck)=table2array(readtable(strcat(in_path,'/speedReductionFactorWhenStuck.txt')))*speed(indStuck);
 inverseSpeed = 1 ./speedStuck;
 
 % search.originX,Y is made into a new coordinate system, defined by minXY-maxXY to align with the size of whichList

@@ -1,15 +1,20 @@
 % Function to find path, gets start and finish coordinates
-function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime)
-    addpath algorithm/subroutines
-    addpath algorithm/classes
-    addpath environment
-    load environment/iceThickness.mat
+function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = AStar(search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime, env_path, in_path)
+
+    if (isdeployed == 0) 
+        addpath algorithm/subroutines
+        addpath algorithm/classes
+        addpath environment
+        load(strcat(env_path, '/iceThickness.mat'));
+    else
+        load(strcat(in_path, '/iceData.mat'));
+    end
 %     load environment/iceThickness.mat
 %     levelIceTimes=datetime(levelIceTimes);
 %     ridgedIceTimes=datetime(ridgedIceTimes);
     secondsPerDay = 86400;
     secondsPerHour=3600;
-    speedMatrixStartingTime=datetime(table2array(readtable('INvoyageStartTime')));
+    speedMatrixStartingTime=datetime(table2array(readtable(strcat(in_path,'/INvoyageStartTime'))));
     speedMatrixStartingTime=datenum(speedMatrixStartingTime);
     iceForecastInitialTime=datestr(levelIceTimes(1));           
     %iceForecastInitialTime is the time at which the ice foreacst was issued, which is valid for certain time. This is taken directly from the ice information provided by VTT 
