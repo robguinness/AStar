@@ -181,7 +181,11 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
                                 % hours:minutes:seconds
                                 %currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y)/secondsPerDay; 
                                 %currentTime is expressed in hh:mm:ss, thus GCost needs to be expressed as fraction of hours not seconds
-                                startTimeSliceOfSpeedMatrix=ceil(timeDifferenceVoyageForecast/speedMatrixUpdateInterval);
+                                if timeDifferenceVoyageForecast<0
+                                    startTimeSliceOfSpeedMatrix=1;
+                                else
+                                    startTimeSliceOfSpeedMatrix=ceil(timeDifferenceVoyageForecast/speedMatrixUpdateInterval);
+                                end
                                 currentTimeSliceOfSpeedMatrix = startTimeSliceOfSpeedMatrix + round((Gcost(currentNode.x,currentNode.y)/secondsPerHour)/speedMatrixUpdateInterval);
                                 %currentTime = speedMatrixStartingTime + Gcost(currentNode.x,currentNode.y);
                                 % here currentTime is expressed in seconds
