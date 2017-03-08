@@ -110,7 +110,7 @@ end
 % Calculate time estimate for multi-leg route if one given
 mytime = 0;
 currentTime = voyageStartTime;
-if evaluateRoute == 1
+if evaluateRoute == '1'
     routeInput=readtable(strcat(in_path,'/INrouteCoordinates'));
     routeInputArray = table2array(routeInput);
     clearvars routeInput
