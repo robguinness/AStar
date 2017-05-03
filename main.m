@@ -30,6 +30,8 @@ end
 %% Initializing routing algorithm
 [search, latitude, longitude, inverseSpeed, whichList, waypoints, drawUpdates, smoothingOn, startTime,speed,stuck,iceDataTimes] = init(env_path, in_path, out_path);
 
+writeWeatherXML(speed, stuck, whichList, iceDataTimes, latitude, longitude, strcat(out_path,'/OUTSpeedStuckData.xml'));
+
 if (optimize == '1')
 
     %% Starting A* algorithm
