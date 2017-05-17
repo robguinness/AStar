@@ -114,7 +114,7 @@ disp('Initializing the program...')
 
 %% Misc. initialization
 % Lauri's part of the code goes here
-
+isdeployed=0;
 if (isdeployed == 1) 
     % Load data from ViewIce format and save in .mat file when in deployed
     % mode
@@ -251,6 +251,7 @@ end
 % this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 % the thickness needs to be multiplied with the concentration to obtain the
 % meaningful results
+iceConcentration(find(iceConcentration<0.7))=0;
 hi=levelIce.*iceConcentration;
 heq=ridgedIce.*iceConcentration;
 
@@ -271,7 +272,8 @@ hi_ind=hi./0.1;
 % the same as above. Both indices are taken to obtain the speed value and probability of getting stuck.
 
 [speed]=interpolationMetaSpeed(hi_ind,heq_ind,env_path); % the speed array is created based on hi and heq and speed-meta model
-speed(find(speed<0.001)) = 0.01; % this is made to avoid negative speeds that may occur as a result of interpolation
+%speed(find(speed<0.001)) = 0.01; % this is made to avoid negative speeds that may occur as a result of interpolation
+speed(find(speed<2)) = 3.5; % this manipulaiton is based on winter traffic analysis, where 1A super in independend mode did not have speed lower that 4 kn
 [stuck]=interpolationMetaStuck(hi_ind,heq_ind,env_path); % the probability of getting stuck array is created based on hi and heq and speed meta-model
 stuck(find(stuck<0)) = 0; % to avoid P(stuck) greater than 1 or smaller than 0, due to interpolation errors
 stuck(find(stuck>1)) = 1;

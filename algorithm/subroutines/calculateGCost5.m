@@ -2,7 +2,7 @@
 % The difference between this one and calculateGCost3 is that this more
 % accurate geodetic distance (but is slower to compute however still faster than using calculateGCost4), whereas
 % calculateGCost3 uses precomputed geometric distances based on Euclidean distance.
-% Distance is given in meters, however the original output of DISTANC function is in degrees.
+% Distance is given in meters, however the original output of DISTANCE function is in degrees.
 % GCost is time elapsed from a starting point to a given point and is
 % expressed in seconds
 function [gCost, dist] = calculateGCost5(x1,y1,x2,y2,latitude, longitude,inverseSpeedDynamic, waypoints, maxSpeed,distThreshold)

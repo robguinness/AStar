@@ -5,7 +5,7 @@ function [x, y] = calcXY(latitude,longitude,pointLat,pointLong)
 % INPUTS:
 % latitude  - matrix of latitudes covering the search space, calculated
 %             with the use of CALCULATECOORDINATES function
-% longitude - matrix of longitudes covering the search space calcualted in
+% longitude - matrix of longitudes covering the search space calculated in
 %             the same way as latitude
 % pointLat  - latitude of a given point
 % poinLong  - longitude of a given point

@@ -7,7 +7,9 @@ function [pathCoordinates,speedAlongPath,timeAlongPath,pathLength] = processResu
 
 %% Reducing number of points in a path, calculating path length, speed along the path and travel time along the path
 
-[latout,longout] = reducem(pathArray(:,2),pathArray(:,1));
+%[latout,longout] = reducem(pathArray(:,2),pathArray(:,1));
+latout=pathArray(:,2);
+longout=pathArray(:,1);
 pathReduced=[latout, longout];
 
 if drawResults

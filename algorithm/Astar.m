@@ -162,7 +162,7 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
             %% Check the neighbours
           
             %for j=1:56
-            for j=1:56
+            for j=1:8
                 neighbor = getNextNeighbor(j, currentNode);
                 
                 % Check if it is within bounds of a map
@@ -242,7 +242,7 @@ function [pathMatrix, pathAndSpeedArray, Gcost,timeCoordinateSpeedMatrix] = ASta
                                     parentY(neighbor.x,neighbor.y) = currentNode.y;
                                     Gcost(neighbor.x,neighbor.y) = tempGcost;
 
-                                    % Changing G cost also changes F cost, sothe open list has to be updated
+                                    % Changing G cost also changes F cost, so the open list has to be updated
                                     % Change F cost
                                     openListNew.updateByCoordinates(neighbor,tempGcost);
 
