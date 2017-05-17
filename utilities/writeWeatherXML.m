@@ -29,7 +29,7 @@ for n = 1:size(speed,3)
             if whichList(lon,lat) == 4 || whichList(lon,lat) == 5
                 fprintf(fid, '%d ', nullvalue);
             else
-                fprintf(fid, '%d ', round(speed(lon,lat)*scalingfactor));
+                fprintf(fid, '%d ', round(speed(lon,lat,n)*scalingfactor));
             end
         end
         fprintf(fid, '\n');
@@ -50,7 +50,7 @@ for n = 1:size(speed,3)
             if whichList(lon,lat) == 4 || whichList(lon,lat) == 5
                 fprintf(fid, '%d ', nullvalue);
             else
-                fprintf(fid, '%d ', round(stuck(lon,lat)*scalingfactor));
+                fprintf(fid, '%d ', round(stuck(lon,lat,n)*scalingfactor));
             end
         end
         fprintf(fid, '\n');
