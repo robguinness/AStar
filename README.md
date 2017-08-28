@@ -19,6 +19,5 @@ The shortest path is given in Google Earth kml-file format displayable in that p
 CONTRIBUTORS
 
 Finnish Geospatial Research Institute, Navigation department
-Robert Guinness
-Jakub Montewka
-Ville Lehtola
+
+Robert Guinness, Jakub Montewka, Ville Lehtola
