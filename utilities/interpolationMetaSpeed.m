@@ -9,6 +9,12 @@ function [metaSpeed] = interpolationMetaSpeed(x,y,env_path)
 % hi = 0.1:0.1:0.8; level ice thicknesses
 % heq = 0.05:0.05:0.6; equivalent ice thicknesses
 
+% openWaterSpeed=8; %speed in m/s
+% 
+% if hi=0;
+%     metaSpeed=openWaterSpeed;
+% else
+    
 load(strcat(env_path, '/metaSpeed.mat'));
 v_m(find(v_m==0))=0.1;
 M = size(v_m,1);

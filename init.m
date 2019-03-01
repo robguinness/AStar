@@ -250,9 +250,17 @@ end
 
 % this is array containing ice thickness information, for level ice (hi) and equivalent ice thickness (heq) in [m]
 % the thickness needs to be multiplied with the concentration to obtain the
-% meaningful results
-iceConcentration(find(iceConcentration<0.7))=0;
+% meaningful results. The assumtpion is as follows: if c<lower_threshold, ship
+% can attain open water speed, if c>uppoer_threshold (e.g. 0.95) the ship
+% navigates in ice, if c falls between the speed is something between open
+% water if ice speed. It goes down with increasing c - see Kotovirta et al.
+% 2009.
+iceConcentration(find(iceConcentration<0.8))=0;
 hi=levelIce.*iceConcentration;
+% By definition equivalent ice thickness is the articifial layer of
+% deformed ice, as if the ridged ice in the area was evenly distributed
+% across a grid cell. In HELMI ridgedIce corresponds to this parameter.
+% In order to obtain actual ridged ice thickenss one need to divide the HELMI thickness by concentration. 
 heq=ridgedIce.*iceConcentration;
 
 load(strcat(env_path, '/metaSpeed.mat'));
@@ -273,7 +281,7 @@ hi_ind=hi./0.1;
 
 [speed]=interpolationMetaSpeed(hi_ind,heq_ind,env_path); % the speed array is created based on hi and heq and speed-meta model
 %speed(find(speed<0.001)) = 0.01; % this is made to avoid negative speeds that may occur as a result of interpolation
-speed(find(speed<2)) = 3.5; % this manipulaiton is based on winter traffic analysis, where 1A super in independend mode did not have speed lower that 4 kn
+speed(find(speed<2)) = 2; % this manipulaiton is based on winter traffic analysis, where 1A super in independend mode did not have speed lower that 2 m/s
 [stuck]=interpolationMetaStuck(hi_ind,heq_ind,env_path); % the probability of getting stuck array is created based on hi and heq and speed meta-model
 stuck(find(stuck<0)) = 0; % to avoid P(stuck) greater than 1 or smaller than 0, due to interpolation errors
 stuck(find(stuck>1)) = 1;
